@@ -4,11 +4,26 @@ Lens is a small runtime debug/inspection panel for Unity projects. It gives deve
 
 Lens is intentionally generic. Runtime systems register section providers, Lens renders those sections, and QA can copy a readable debug report for bug reproduction.
 
+## How To Use Lens
+
+Use Lens whenever an important runtime value should be visible during development, QA, staging, or controlled internal builds.
+
+Common examples:
+
+- expose the active environment and config source,
+- show evaluated feature flags,
+- show safe session/debug identifiers,
+- list recent gameplay/product events,
+- expose performance counters,
+- add safe action buttons for project-owned debug tools.
+
+Install the package, add a provider, register it during bootstrap, then open Lens with `F1` or the floating `Lens` button.
+
 ## Why Lens Exists
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay.
 
-V0.2 is deliberately small but interactive:
+V0.3 is deliberately small but interactive:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -19,6 +34,16 @@ V0.2 is deliberately small but interactive:
 - Read-only, toggle, text, number, and button entries
 - Copy-to-clipboard debug report
 - Basic sample scene
+- Runtime-safe package tests
+
+## Screenshots
+
+Screenshots will be added here once the visual pass is ready.
+
+```text
+Docs/images/lens-overlay.png
+Docs/images/lens-interactive-entries.png
+```
 
 ## Install
 
@@ -171,12 +196,19 @@ These integrations are intentionally out of scope for V0.2.
 
 Potential future features:
 
+- Screenshots and visual README assets
 - JSON export
 - Screenshot capture
 - Local flag overrides
 - Secure activation gesture
 - Production-safe redaction rules
 - Optional adapters for project DI patterns such as Zenject
+
+## For Agents And Contributors
+
+- See `AGENTS.md` for repo-level coding-agent guidance.
+- See `Docs/agent-usage.md` for how agents should expose important runtime values in consuming Unity projects.
+- See `CONTRIBUTING.md` for validation and versioning guidance.
 
 ## License
 

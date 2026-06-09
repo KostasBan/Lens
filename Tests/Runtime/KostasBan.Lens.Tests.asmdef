@@ -1,0 +1,19 @@
+{
+  "name": "KostasBan.Lens.Tests",
+  "rootNamespace": "KostasBan.Lens.Tests",
+  "references": [
+    "KostasBan.Lens"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}

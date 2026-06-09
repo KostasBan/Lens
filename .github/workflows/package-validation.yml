@@ -1,0 +1,70 @@
+name: Package Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-package:
+    name: Validate package metadata and structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $package = Get-Content -Raw package.json | ConvertFrom-Json
+
+          if ($package.name -ne "com.kostasban.lens") {
+            throw "Unexpected package name: $($package.name)"
+          }
+
+          if (-not $package.version) {
+            throw "package.json is missing a version."
+          }
+
+          $requiredPaths = @(
+            "Runtime/KostasBan.Lens.asmdef",
+            "Runtime/ILensSectionProvider.cs",
+            "Runtime/LensEntry.cs",
+            "Runtime/LensRuntimeConsole.cs",
+            "Tests/Runtime/KostasBan.Lens.Tests.asmdef",
+            "Samples~/Basic Lens Demo/Scripts/LensDemoBootstrap.cs",
+            "README.md",
+            "AGENTS.md",
+            "Docs/agent-usage.md",
+            "CHANGELOG.md",
+            "CONTRIBUTING.md"
+          )
+
+          foreach ($path in $requiredPaths) {
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "Missing required path: $path"
+            }
+          }
+
+          $legacyInputMatches = Get-ChildItem Runtime -Recurse -Filter *.cs |
+            Select-String -Pattern "Input\.GetKeyDown|UnityEngine\.Input" -ErrorAction SilentlyContinue
+          if ($legacyInputMatches) {
+            throw "Lens runtime should not depend on legacy UnityEngine.Input polling."
+          }
+
+          $runtimeFiles = Get-ChildItem Runtime -Recurse -File | Where-Object {
+            $_.Extension -in ".cs", ".asmdef"
+          }
+
+          foreach ($file in $runtimeFiles) {
+            $metaPath = "$($file.FullName).meta"
+            if (-not (Test-Path -LiteralPath $metaPath)) {
+              throw "Missing Unity meta file for $($file.FullName)"
+            }
+          }
+
+          Write-Host "Package validation passed for $($package.name)@$($package.version)."

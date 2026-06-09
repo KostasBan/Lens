@@ -1,0 +1,56 @@
+using NUnit.Framework;
+
+namespace KostasBan.Lens.Tests
+{
+    public sealed class LensConsoleStateTests
+    {
+        [Test]
+        public void OpenCloseAndToggleUpdateVisibility()
+        {
+            var state = new LensConsoleState();
+
+            state.Open();
+            Assert.IsTrue(state.IsOpen);
+
+            state.Toggle();
+            Assert.IsFalse(state.IsOpen);
+
+            state.Close();
+            Assert.IsFalse(state.IsOpen);
+        }
+
+        [Test]
+        public void SectionsStartExpandedAndCanToggle()
+        {
+            var state = new LensConsoleState();
+
+            Assert.IsTrue(state.IsSectionExpanded("Build"));
+
+            state.ToggleSection("Build");
+
+            Assert.IsFalse(state.IsSectionExpanded("Build"));
+        }
+
+        [Test]
+        public void SearchDetectsNonEmptyText()
+        {
+            var state = new LensConsoleState();
+
+            Assert.IsFalse(state.HasSearch);
+
+            state.SearchText = "flags";
+
+            Assert.IsTrue(state.HasSearch);
+        }
+
+        [Test]
+        public void NumberDraftPersistsUserText()
+        {
+            var state = new LensConsoleState();
+
+            state.SetNumberDraft("Feature/Multiplier", "abc");
+
+            Assert.AreEqual("abc", state.GetNumberDraft("Feature/Multiplier", 1.25f));
+        }
+    }
+}
