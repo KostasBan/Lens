@@ -45,6 +45,8 @@ Or add this entry to your Unity project's `Packages/manifest.json`:
 6. Press `F1` to open or close Lens.
 7. Click `Copy Debug Report` to copy the current section data.
 
+Lens handles the toggle through IMGUI events, so it does not require the legacy Input Manager or the new Input System package.
+
 The sample registers five providers:
 
 - Build Info

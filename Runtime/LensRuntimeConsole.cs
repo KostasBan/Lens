@@ -31,16 +31,10 @@ namespace KostasBan.Lens
             DontDestroyOnLoad(gameObject);
         }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(toggleKey))
-            {
-                isOpen = !isOpen;
-            }
-        }
-
         private void OnGUI()
         {
+            HandleToggleEvent(Event.current);
+
             if (!isOpen)
             {
                 return;
@@ -48,6 +42,17 @@ namespace KostasBan.Lens
 
             EnsureStyles();
             DrawPanel();
+        }
+
+        private void HandleToggleEvent(Event currentEvent)
+        {
+            if (currentEvent == null || currentEvent.type != EventType.KeyDown || currentEvent.keyCode != toggleKey)
+            {
+                return;
+            }
+
+            isOpen = !isOpen;
+            currentEvent.Use();
         }
 
         private void DrawPanel()
