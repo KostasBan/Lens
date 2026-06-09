@@ -6,23 +6,16 @@ namespace KostasBan.Lens
 {
     public sealed class LensRuntimeConsole : MonoBehaviour
     {
-        private const float CopyStatusDuration = 2f;
-
         [SerializeField] private KeyCode toggleKey = KeyCode.F1;
+        [SerializeField] private bool showFloatingButton = true;
+        [SerializeField] private string floatingButtonLabel = "Lens";
 
         private readonly List<LensEntry> entryBuffer = new List<LensEntry>();
-        private readonly Color panelColor = new Color(0.05f, 0.05f, 0.06f, 0.92f);
-
-        private bool isOpen;
-        private float copiedAt = -100f;
-        private Vector2 scrollPosition;
-        private Texture2D panelTexture;
-        private GUIStyle panelStyle;
-        private GUIStyle titleStyle;
-        private GUIStyle sectionStyle;
-        private GUIStyle keyStyle;
-        private GUIStyle valueStyle;
-        private GUIStyle statusStyle;
+        private readonly List<LensEntry> visibleEntries = new List<LensEntry>();
+        private readonly LensConsoleState state = new LensConsoleState();
+        private readonly LensEntryFilter filter = new LensEntryFilter();
+        private readonly LensEntryDrawer entryDrawer = new LensEntryDrawer();
+        private readonly LensGuiStyles styles = new LensGuiStyles();
 
         private void Awake()
         {
@@ -31,16 +24,32 @@ namespace KostasBan.Lens
             DontDestroyOnLoad(gameObject);
         }
 
+        public void Open()
+        {
+            state.Open();
+        }
+
+        public void Close()
+        {
+            state.Close();
+        }
+
+        public void Toggle()
+        {
+            state.Toggle();
+        }
+
         private void OnGUI()
         {
+            styles.EnsureInitialized();
             HandleToggleEvent(Event.current);
 
-            if (!isOpen)
+            if (!state.IsOpen)
             {
+                DrawFloatingButton();
                 return;
             }
 
-            EnsureStyles();
             DrawPanel();
         }
 
@@ -51,7 +60,7 @@ namespace KostasBan.Lens
                 return;
             }
 
-            isOpen = !isOpen;
+            state.Toggle();
             currentEvent.Use();
         }
 
@@ -61,12 +70,13 @@ namespace KostasBan.Lens
             var height = Mathf.Min(Screen.height - 32f, 620f);
             var rect = new Rect(16f, 16f, width, height);
 
-            GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
+            GUILayout.BeginArea(rect, GUIContent.none, styles.Panel);
             GUILayout.BeginVertical();
 
             DrawHeader();
+            DrawSearch();
 
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.ExpandHeight(true));
+            state.ScrollPosition = GUILayout.BeginScrollView(state.ScrollPosition, GUILayout.ExpandHeight(true));
 
             foreach (var provider in LensSectionRegistry.Providers)
             {
@@ -83,12 +93,33 @@ namespace KostasBan.Lens
         private void DrawHeader()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Lens", titleStyle);
+            GUILayout.Label("Lens", styles.Title);
             GUILayout.FlexibleSpace();
 
             if (GUILayout.Button("Close", GUILayout.Width(72f)))
             {
-                isOpen = false;
+                state.Close();
+            }
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(8f);
+        }
+
+        private void DrawSearch()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Search", styles.Key, GUILayout.Width(64f));
+
+            var nextSearch = GUILayout.TextField(state.SearchText, styles.SearchField);
+
+            if (!string.Equals(nextSearch, state.SearchText, StringComparison.Ordinal))
+            {
+                state.SearchText = nextSearch ?? string.Empty;
+            }
+
+            if (!string.IsNullOrEmpty(state.SearchText) && GUILayout.Button("Clear", GUILayout.Width(58f)))
+            {
+                state.SearchText = string.Empty;
             }
 
             GUILayout.EndHorizontal();
@@ -102,9 +133,10 @@ namespace KostasBan.Lens
                 return;
             }
 
-            GUILayout.Label(string.IsNullOrWhiteSpace(provider.SectionTitle) ? "Untitled" : provider.SectionTitle, sectionStyle);
+            var sectionTitle = string.IsNullOrWhiteSpace(provider.SectionTitle) ? "Untitled" : provider.SectionTitle;
 
             entryBuffer.Clear();
+            visibleEntries.Clear();
 
             try
             {
@@ -119,15 +151,65 @@ namespace KostasBan.Lens
                 entryBuffer.Add(new LensEntry("Error", "Provider failed while reading entries."));
             }
 
+            var sectionMatchesSearch = filter.MatchesSection(sectionTitle, state.SearchText);
+
             foreach (var entry in entryBuffer)
             {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(entry.Key, keyStyle, GUILayout.Width(190f));
-                GUILayout.Label(entry.Value, valueStyle);
-                GUILayout.EndHorizontal();
+                if (!state.HasSearch || sectionMatchesSearch || EntryMatchesSearch(entry))
+                {
+                    visibleEntries.Add(entry);
+                }
+            }
+
+            if (state.HasSearch && visibleEntries.Count == 0)
+            {
+                return;
+            }
+
+            var expanded = state.HasSearch || state.IsSectionExpanded(sectionTitle);
+            var marker = expanded ? "[-]" : "[+]";
+
+            if (GUILayout.Button($"{marker} {sectionTitle} ({visibleEntries.Count})", styles.SectionHeader))
+            {
+                state.ToggleSection(sectionTitle);
+            }
+
+            if (!expanded)
+            {
+                GUILayout.Space(4f);
+                return;
+            }
+
+            foreach (var entry in visibleEntries)
+            {
+                try
+                {
+                    entryDrawer.Draw(entry, sectionTitle, state, styles);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(entry.Key, styles.Key, GUILayout.Width(190f));
+                    GUILayout.Label("Entry failed while drawing.", styles.ErrorStatus);
+                    GUILayout.EndHorizontal();
+                }
             }
 
             GUILayout.Space(10f);
+        }
+
+        private bool EntryMatchesSearch(LensEntry entry)
+        {
+            try
+            {
+                return filter.MatchesEntry(entry, state.SearchText);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                return true;
+            }
         }
 
         private void DrawFooter()
@@ -138,67 +220,37 @@ namespace KostasBan.Lens
             if (GUILayout.Button("Copy Debug Report", GUILayout.Width(160f)))
             {
                 GUIUtility.systemCopyBuffer = LensReportBuilder.BuildReport(LensSectionRegistry.Providers);
-                copiedAt = Time.realtimeSinceStartup;
+                state.SetStatus("Report copied.");
             }
 
-            if (Time.realtimeSinceStartup - copiedAt <= CopyStatusDuration)
+            if (state.HasStatus)
             {
-                GUILayout.Label("Report copied.", statusStyle);
+                GUILayout.Label(state.StatusMessage, state.StatusIsError ? styles.ErrorStatus : styles.Status);
             }
 
             GUILayout.FlexibleSpace();
-            GUILayout.Label($"Toggle: {toggleKey}", statusStyle);
+            GUILayout.Label($"Toggle: {toggleKey}", styles.Status);
             GUILayout.EndHorizontal();
         }
 
-        private void EnsureStyles()
+        private void DrawFloatingButton()
         {
-            if (panelStyle != null)
+            if (!showFloatingButton)
             {
                 return;
             }
 
-            panelTexture = new Texture2D(1, 1);
-            panelTexture.SetPixel(0, 0, panelColor);
-            panelTexture.Apply();
-            panelTexture.hideFlags = HideFlags.HideAndDontSave;
+            state.FloatingButtonRect = GUI.Window(GetInstanceID(), state.FloatingButtonRect, DrawFloatingButtonWindow, GUIContent.none, styles.FloatingButtonWindow);
+        }
 
-            panelStyle = new GUIStyle(GUI.skin.box)
+        private void DrawFloatingButtonWindow(int windowId)
+        {
+            if (GUILayout.Button(string.IsNullOrWhiteSpace(floatingButtonLabel) ? "Lens" : floatingButtonLabel))
             {
-                padding = new RectOffset(14, 14, 12, 12),
-                normal = { background = panelTexture }
-            };
+                state.Open();
+            }
 
-            titleStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 22,
-                fontStyle = FontStyle.Bold,
-                normal = { textColor = Color.white }
-            };
-
-            sectionStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 15,
-                fontStyle = FontStyle.Bold,
-                normal = { textColor = new Color(0.56f, 0.84f, 1f) }
-            };
-
-            keyStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontStyle = FontStyle.Bold,
-                normal = { textColor = new Color(0.88f, 0.9f, 0.92f) }
-            };
-
-            valueStyle = new GUIStyle(GUI.skin.label)
-            {
-                wordWrap = true,
-                normal = { textColor = Color.white }
-            };
-
-            statusStyle = new GUIStyle(GUI.skin.label)
-            {
-                normal = { textColor = new Color(0.72f, 0.92f, 0.72f) }
-            };
+            GUI.DragWindow(new Rect(0f, 0f, 10000f, 10000f));
         }
     }
 }

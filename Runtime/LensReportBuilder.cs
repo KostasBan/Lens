@@ -44,9 +44,7 @@ namespace KostasBan.Lens
             {
                 foreach (var entry in provider.GetEntries())
                 {
-                    builder.Append(string.IsNullOrWhiteSpace(entry.Key) ? "(empty)" : entry.Key);
-                    builder.Append(": ");
-                    builder.AppendLine(entry.Value);
+                    AppendEntry(builder, entry);
                 }
             }
             catch (Exception exception)
@@ -56,6 +54,29 @@ namespace KostasBan.Lens
             }
 
             builder.AppendLine();
+        }
+
+        private static void AppendEntry(StringBuilder builder, LensEntry entry)
+        {
+            try
+            {
+                builder.Append(string.IsNullOrWhiteSpace(entry.Key) ? "(empty)" : entry.Key);
+                builder.Append(": ");
+
+                if (entry.Kind == LensEntryKind.Button)
+                {
+                    builder.Append("[Action] ");
+                    builder.AppendLine(string.IsNullOrWhiteSpace(entry.ActionLabel) ? entry.Key : entry.ActionLabel);
+                    return;
+                }
+
+                builder.AppendLine(entry.Value);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                builder.AppendLine("Error: Entry failed while generating report.");
+            }
         }
     }
 }
