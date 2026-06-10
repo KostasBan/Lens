@@ -11,6 +11,8 @@ namespace KostasBan.Lens
         private readonly Dictionary<string, bool> expandedSections = new Dictionary<string, bool>();
         private readonly Dictionary<string, string> numberDrafts = new Dictionary<string, string>();
 
+        private string pendingActionKey = string.Empty;
+
         public bool IsOpen { get; private set; }
 
         public string SearchText { get; set; } = string.Empty;
@@ -42,6 +44,21 @@ namespace KostasBan.Lens
         public void Toggle()
         {
             IsOpen = !IsOpen;
+        }
+
+        public bool IsActionConfirmationPending(string actionKey)
+        {
+            return !string.IsNullOrEmpty(actionKey) && string.Equals(pendingActionKey, actionKey, System.StringComparison.Ordinal);
+        }
+
+        public void RequestActionConfirmation(string actionKey)
+        {
+            pendingActionKey = actionKey ?? string.Empty;
+        }
+
+        public void ClearActionConfirmation()
+        {
+            pendingActionKey = string.Empty;
         }
 
         public bool IsSectionExpanded(string sectionTitle)

@@ -22,6 +22,7 @@ Avoid exposing:
 - private player data,
 - destructive actions without clear labels and project-side gating,
 - production-only controls without an explicit build gate.
+- unredacted internal identifiers that would be unsafe in a copied report.
 
 ## Integration Pattern
 
@@ -36,10 +37,12 @@ Use callback entries for important mutable values:
 ```csharp
 yield return LensEntry.Toggle("Feature Enabled", () => system.Enabled, value => system.Enabled = value);
 yield return LensEntry.Number("Spawn Rate", () => system.SpawnRate, value => system.SpawnRate = value);
-yield return LensEntry.Button("Unlock Debug Content", system.UnlockDebugContent);
+yield return LensEntry.Text("Session Token", () => system.SessionToken, value => system.SessionToken = value, true);
+yield return LensEntry.Button("Unlock Debug Content", system.UnlockDebugContent, true, "Unlock debug content?");
 ```
 
 Lens should render and invoke callbacks; the consuming system should own state, validation, permissions, and side effects.
+Use redaction for values that help QA but should not appear raw in the overlay or reports. Use confirmation for progression, inventory, account, save, tutorial, or content-unlock actions.
 
 ## Repo Rules
 
@@ -57,3 +60,4 @@ Lens should render and invoke callbacks; the consuming system should own state, 
 - Sample scene compiles.
 - README examples still match the public API.
 - Reports never execute action entries.
+- Reports and search do not expose raw sensitive values.

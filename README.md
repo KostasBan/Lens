@@ -23,7 +23,7 @@ Install the package, add a provider, register it during bootstrap, then open Len
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay.
 
-V0.3 is deliberately small but interactive:
+V0.4 is deliberately small but more production-minded:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -32,6 +32,9 @@ V0.3 is deliberately small but interactive:
 - Search by section, key, value, or action label
 - Provider-based sections
 - Read-only, toggle, text, number, and button entries
+- Internal-build enablement policy
+- Sensitive entry redaction
+- Optional confirmation for action buttons
 - Copy-to-clipboard debug report
 - Basic sample scene
 - Runtime-safe package tests
@@ -83,7 +86,7 @@ The sample registers five providers:
 - Sample Recent Events
 - Performance
 
-The sample feature flag section includes editable toggles, a text value, a numeric value, and action buttons.
+The sample feature flag section includes editable toggles, a text value, a numeric value, action buttons, a redacted sample token, and a confirmed unlock action.
 
 ## Add A Custom Section
 
@@ -136,7 +139,7 @@ public sealed class DebugSettingsLensSection : ILensSectionProvider
         yield return LensEntry.Toggle("God Mode", () => godMode, value => godMode = value);
         yield return LensEntry.Text("Environment", () => environment, value => environment = value);
         yield return LensEntry.Number("Coin Multiplier", () => coinMultiplier, value => coinMultiplier = value);
-        yield return LensEntry.Button("Unlock Content", UnlockContent);
+        yield return LensEntry.Button("Unlock Content", UnlockContent, true, "Unlock all content?");
     }
 
     private void UnlockContent()
@@ -148,6 +151,39 @@ public sealed class DebugSettingsLensSection : ILensSectionProvider
 
 Button entries are useful for predefined debug actions, such as unlocking content, resetting tutorial state, opening an internal diagnostics panel, or showing a third-party in-game debug console. Lens does not depend on those tools directly; the consuming project wires that behavior in the callback.
 
+Use confirmation for actions that mutate account, progression, inventory, tutorial, economy, or save state.
+
+## Internal Build Policy
+
+Lens is enabled by default only for Editor, Development Build, or builds compiled with `LENS_ENABLED`:
+
+```csharp
+if (LensRuntimePolicy.IsAllowed)
+{
+    LensSectionRegistry.Register(new MyGameLensSection());
+}
+```
+
+Projects can override this at runtime for their own internal bootstrap:
+
+```csharp
+LensRuntimePolicy.SetAllowed(true);
+LensRuntimePolicy.ResetToDefault();
+```
+
+`LensRuntimeConsole.Open()` and `Toggle()` do nothing when Lens is not allowed. `Close()` always works.
+
+## Redacted Entries
+
+Mark sensitive values explicitly. Lens keeps the raw value available to the provider-owned callback path, but the overlay, search, and copied reports use the redacted display value.
+
+```csharp
+yield return LensEntry.Text("User Token", () => token, value => token = value, true);
+yield return new LensEntry("Install Id", installId, true);
+```
+
+Redaction is a safety aid, not a security boundary. Do not expose secrets, auth tokens, payment data, private player data, or anything that should never exist in an internal debug overlay.
+
 ## Debug Reports
 
 Lens builds a readable plain text report from the currently registered providers:
@@ -155,6 +191,7 @@ Lens builds a readable plain text report from the currently registered providers
 ```text
 Lens Debug Report
 Generated: 2026-06-09T12:30:00.0000000Z
+Lens Version: 0.4.0
 
 [Build Info]
 App Version: 0.1.0
@@ -167,10 +204,11 @@ Debug Build: True
 This is useful for QA bug reports, staging checks, and quick developer handoffs.
 
 Interactive values are reported using their current callback values. Action buttons are listed as available actions and are never executed while building a report.
+Sensitive values are reported as `[redacted]`.
 
 ## Production Notes
 
-Lens is intended for Editor, Development Builds, or explicitly enabled internal builds. V0.2 keeps gating simple and visible in code rather than adding a security system too early.
+Lens is intended for Editor, Development Builds, or explicitly enabled internal builds.
 
 For later versions, a project can wrap Lens initialization with:
 
@@ -190,7 +228,7 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V0.2.
+These integrations are intentionally out of scope for V0.4.
 
 ## Roadmap
 

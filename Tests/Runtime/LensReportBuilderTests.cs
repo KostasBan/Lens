@@ -12,12 +12,13 @@ namespace KostasBan.Lens.Tests
         {
             var report = LensReportBuilder.BuildReport(new[]
             {
-                new StaticProvider("Build", new LensEntry("Version", "0.3.0"))
+                new StaticProvider("Build", new LensEntry("Version", "1.2.3"))
             });
 
             StringAssert.Contains("Lens Debug Report", report);
+            StringAssert.Contains("Lens Version: 0.4.0", report);
             StringAssert.Contains("[Build]", report);
-            StringAssert.Contains("Version: 0.3.0", report);
+            StringAssert.Contains("Version: 1.2.3", report);
         }
 
         [Test]
@@ -50,6 +51,18 @@ namespace KostasBan.Lens.Tests
 
             Assert.IsFalse(executed);
             StringAssert.Contains("Unlock Content: [Action] Unlock Content", report);
+        }
+
+        [Test]
+        public void BuildReportRedactsSensitiveValues()
+        {
+            var report = LensReportBuilder.BuildReport(new[]
+            {
+                new StaticProvider("Session", new LensEntry("Token", "secret-token", true))
+            });
+
+            StringAssert.Contains("Token: [redacted]", report);
+            Assert.IsFalse(report.Contains("secret-token"));
         }
 
         [Test]

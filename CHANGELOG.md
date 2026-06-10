@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 - Production Safety
+
+- Added `LensRuntimePolicy` for explicit internal-build enablement.
+- Added sensitive entry metadata and redacted UI/report display values.
+- Added optional confirmation for action button entries.
+- Added Lens package version to copied debug reports.
+- Updated sample and docs with safe internal-build usage guidance.
+
 ## 0.3.0 - Quality Release
 
 Planned/implemented focus:

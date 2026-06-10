@@ -5,6 +5,8 @@ namespace KostasBan.Lens
 {
     public readonly struct LensEntry
     {
+        public const string DefaultRedactedValue = "[redacted]";
+
         private readonly string readOnlyValue;
         private readonly Func<bool> boolGetter;
         private readonly Action<bool> boolSetter;
@@ -15,10 +17,24 @@ namespace KostasBan.Lens
         private readonly Action action;
 
         public LensEntry(string key, string value)
+            : this(key, value, false, DefaultRedactedValue)
+        {
+        }
+
+        public LensEntry(string key, string value, bool isSensitive)
+            : this(key, value, isSensitive, DefaultRedactedValue)
+        {
+        }
+
+        public LensEntry(string key, string value, bool isSensitive, string redactedValue)
         {
             Key = key ?? string.Empty;
             Kind = LensEntryKind.ReadOnly;
             ActionLabel = string.Empty;
+            IsSensitive = isSensitive;
+            RedactedValue = string.IsNullOrEmpty(redactedValue) ? DefaultRedactedValue : redactedValue;
+            RequiresConfirmation = false;
+            ConfirmationMessage = string.Empty;
             readOnlyValue = value ?? string.Empty;
             boolGetter = null;
             boolSetter = null;
@@ -34,6 +50,16 @@ namespace KostasBan.Lens
         public LensEntryKind Kind { get; }
 
         public string ActionLabel { get; }
+
+        public bool IsSensitive { get; }
+
+        public string RedactedValue { get; }
+
+        public bool RequiresConfirmation { get; }
+
+        public string ConfirmationMessage { get; }
+
+        public string DisplayValue => IsSensitive ? RedactedValue : Value;
 
         public string Value
         {
@@ -60,7 +86,17 @@ namespace KostasBan.Lens
             return new LensEntry(key, value);
         }
 
-        public static LensEntry Toggle(string key, Func<bool> getValue, Action<bool> setValue)
+        public static LensEntry ReadOnly(string key, string value, bool isSensitive)
+        {
+            return new LensEntry(key, value, isSensitive);
+        }
+
+        public static LensEntry ReadOnly(string key, string value, bool isSensitive, string redactedValue)
+        {
+            return new LensEntry(key, value, isSensitive, redactedValue);
+        }
+
+        public static LensEntry Toggle(string key, Func<bool> getValue, Action<bool> setValue, bool isSensitive = false, string redactedValue = DefaultRedactedValue)
         {
             if (getValue == null)
             {
@@ -72,10 +108,10 @@ namespace KostasBan.Lens
                 throw new ArgumentNullException(nameof(setValue));
             }
 
-            return new LensEntry(key, LensEntryKind.Toggle, string.Empty, null, getValue, setValue, null, null, null, null, null);
+            return new LensEntry(key, LensEntryKind.Toggle, string.Empty, null, getValue, setValue, null, null, null, null, null, isSensitive, redactedValue, false, null);
         }
 
-        public static LensEntry Text(string key, Func<string> getValue, Action<string> setValue)
+        public static LensEntry Text(string key, Func<string> getValue, Action<string> setValue, bool isSensitive = false, string redactedValue = DefaultRedactedValue)
         {
             if (getValue == null)
             {
@@ -87,10 +123,10 @@ namespace KostasBan.Lens
                 throw new ArgumentNullException(nameof(setValue));
             }
 
-            return new LensEntry(key, LensEntryKind.Text, string.Empty, null, null, null, getValue, setValue, null, null, null);
+            return new LensEntry(key, LensEntryKind.Text, string.Empty, null, null, null, getValue, setValue, null, null, null, isSensitive, redactedValue, false, null);
         }
 
-        public static LensEntry Number(string key, Func<float> getValue, Action<float> setValue)
+        public static LensEntry Number(string key, Func<float> getValue, Action<float> setValue, bool isSensitive = false, string redactedValue = DefaultRedactedValue)
         {
             if (getValue == null)
             {
@@ -102,22 +138,22 @@ namespace KostasBan.Lens
                 throw new ArgumentNullException(nameof(setValue));
             }
 
-            return new LensEntry(key, LensEntryKind.Number, string.Empty, null, null, null, null, null, getValue, setValue, null);
+            return new LensEntry(key, LensEntryKind.Number, string.Empty, null, null, null, null, null, getValue, setValue, null, isSensitive, redactedValue, false, null);
         }
 
-        public static LensEntry Button(string label, Action onClick)
+        public static LensEntry Button(string label, Action onClick, bool requiresConfirmation = false, string confirmationMessage = null)
         {
-            return Button(label, label, onClick);
+            return Button(label, label, onClick, requiresConfirmation, confirmationMessage);
         }
 
-        public static LensEntry Button(string key, string label, Action onClick)
+        public static LensEntry Button(string key, string label, Action onClick, bool requiresConfirmation = false, string confirmationMessage = null)
         {
             if (onClick == null)
             {
                 throw new ArgumentNullException(nameof(onClick));
             }
 
-            return new LensEntry(key, LensEntryKind.Button, label, null, null, null, null, null, null, null, onClick);
+            return new LensEntry(key, LensEntryKind.Button, label, null, null, null, null, null, null, null, onClick, false, DefaultRedactedValue, requiresConfirmation, confirmationMessage);
         }
 
         public bool GetBoolValue()
@@ -166,11 +202,19 @@ namespace KostasBan.Lens
             Action<string> textSetter,
             Func<float> numberGetter,
             Action<float> numberSetter,
-            Action action)
+            Action action,
+            bool isSensitive,
+            string redactedValue,
+            bool requiresConfirmation,
+            string confirmationMessage)
         {
             Key = key ?? string.Empty;
             Kind = kind;
             ActionLabel = actionLabel ?? string.Empty;
+            IsSensitive = isSensitive;
+            RedactedValue = string.IsNullOrEmpty(redactedValue) ? DefaultRedactedValue : redactedValue;
+            RequiresConfirmation = requiresConfirmation;
+            ConfirmationMessage = confirmationMessage ?? string.Empty;
             this.readOnlyValue = readOnlyValue ?? string.Empty;
             this.boolGetter = boolGetter;
             this.boolSetter = boolSetter;

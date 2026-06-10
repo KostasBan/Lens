@@ -17,6 +17,8 @@ Good candidates:
 - performance or loading diagnostics,
 - safe debug actions.
 
+Use Lens only from Editor, Development Build, staging, QA, dogfood, or explicitly enabled internal builds. Check `LensRuntimePolicy.IsAllowed` before creating package-owned bootstrap objects in consuming projects.
+
 ## Add A Section
 
 Create a class that implements `ILensSectionProvider` near the system that owns the data.
@@ -40,7 +42,8 @@ public sealed class EconomyLensSection : ILensSectionProvider
     {
         yield return new LensEntry("Coins", economy.Coins.ToString());
         yield return LensEntry.Toggle("Double Rewards", () => economy.DoubleRewards, value => economy.DoubleRewards = value);
-        yield return LensEntry.Button("Grant Test Coins", () => economy.GrantCoins(100));
+        yield return LensEntry.Text("Session Token", () => economy.SessionToken, value => economy.SessionToken = value, true);
+        yield return LensEntry.Button("Grant Test Coins", () => economy.GrantCoins(100), true, "Grant 100 test coins?");
     }
 }
 ```
@@ -63,6 +66,7 @@ Use mutable entries only when changing the value is useful for testing and the o
 - `LensEntry.Button` for explicit debug actions.
 
 Do not expose destructive actions with vague names. Prefer labels like `Reset Local Tutorial State` over `Reset`.
+Mark useful sensitive values as redacted with the `isSensitive` overload. Use confirmation for actions that mutate progression, inventory, account state, save data, tutorial state, or content unlocks.
 
 ## Third-Party Debug Panels
 
@@ -74,4 +78,4 @@ yield return LensEntry.Button("Open Debug Console", debugConsole.Show);
 
 ## Report Behavior
 
-Lens reports read current values from callbacks. Action buttons are listed as available actions and are not executed while generating reports.
+Lens reports read current values from callbacks. Action buttons are listed as available actions and are not executed while generating reports. Sensitive entries are emitted as `[redacted]`, and search does not match their raw values.

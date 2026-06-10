@@ -52,5 +52,19 @@ namespace KostasBan.Lens.Tests
 
             Assert.AreEqual("abc", state.GetNumberDraft("Feature/Multiplier", 1.25f));
         }
+
+        [Test]
+        public void ActionConfirmationCanBeRequestedAndCleared()
+        {
+            var state = new LensConsoleState();
+
+            state.RequestActionConfirmation("Actions/Unlock");
+
+            Assert.IsTrue(state.IsActionConfirmationPending("Actions/Unlock"));
+
+            state.ClearActionConfirmation();
+
+            Assert.IsFalse(state.IsActionConfirmationPending("Actions/Unlock"));
+        }
     }
 }

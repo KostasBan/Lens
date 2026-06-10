@@ -24,5 +24,16 @@ namespace KostasBan.Lens.Tests
             Assert.IsTrue(filter.MatchesEntry(action, "console"));
             Assert.IsFalse(filter.MatchesEntry(readOnly, "missing"));
         }
+
+        [Test]
+        public void SensitiveEntryDoesNotMatchRawValue()
+        {
+            var filter = new LensEntryFilter();
+            var entry = new LensEntry("Token", "secret-token", true);
+
+            Assert.IsTrue(filter.MatchesEntry(entry, "token"));
+            Assert.IsTrue(filter.MatchesEntry(entry, "redacted"));
+            Assert.IsFalse(filter.MatchesEntry(entry, "secret-token"));
+        }
     }
 }

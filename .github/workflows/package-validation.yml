@@ -30,10 +30,17 @@ jobs:
             throw "package.json is missing a version."
           }
 
+          $packageInfo = Get-Content -Raw Runtime/LensPackageInfo.cs
+          if ($packageInfo -notmatch "Version = `"$($package.version)`"") {
+            throw "LensPackageInfo.Version does not match package.json version $($package.version)."
+          }
+
           $requiredPaths = @(
             "Runtime/KostasBan.Lens.asmdef",
             "Runtime/ILensSectionProvider.cs",
             "Runtime/LensEntry.cs",
+            "Runtime/LensPackageInfo.cs",
+            "Runtime/LensRuntimePolicy.cs",
             "Runtime/LensRuntimeConsole.cs",
             "Tests/Runtime/KostasBan.Lens.Tests.asmdef",
             "Samples~/Basic Lens Demo/Scripts/LensDemoBootstrap.cs",

@@ -8,6 +8,12 @@ namespace KostasBan.Lens
     {
         public void Draw(LensEntry entry, string sectionTitle, LensConsoleState state, LensGuiStyles styles)
         {
+            if (entry.IsSensitive)
+            {
+                DrawReadOnly(entry, styles);
+                return;
+            }
+
             switch (entry.Kind)
             {
                 case LensEntryKind.Toggle:
@@ -20,7 +26,7 @@ namespace KostasBan.Lens
                     DrawNumber(entry, sectionTitle, state, styles);
                     break;
                 case LensEntryKind.Button:
-                    DrawButton(entry, state, styles);
+                    DrawButton(entry, sectionTitle, state, styles);
                     break;
                 default:
                     DrawReadOnly(entry, styles);
@@ -32,7 +38,7 @@ namespace KostasBan.Lens
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(entry.Key, styles.Key, GUILayout.Width(190f));
-            GUILayout.Label(entry.Value, styles.Value);
+            GUILayout.Label(entry.DisplayValue, styles.Value);
             GUILayout.EndHorizontal();
         }
 
@@ -90,28 +96,63 @@ namespace KostasBan.Lens
             GUILayout.EndHorizontal();
         }
 
-        private static void DrawButton(LensEntry entry, LensConsoleState state, LensGuiStyles styles)
+        private static void DrawButton(LensEntry entry, string sectionTitle, LensConsoleState state, LensGuiStyles styles)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(entry.Key, styles.Key, GUILayout.Width(190f));
 
             var label = string.IsNullOrWhiteSpace(entry.ActionLabel) ? entry.Key : entry.ActionLabel;
+            var actionKey = $"{sectionTitle}/{entry.Key}/{label}";
+
+            if (entry.RequiresConfirmation && state.IsActionConfirmationPending(actionKey))
+            {
+                var message = string.IsNullOrWhiteSpace(entry.ConfirmationMessage) ? "Confirm action?" : entry.ConfirmationMessage;
+                GUILayout.Label(message, styles.Value, GUILayout.MinWidth(160f));
+
+                if (GUILayout.Button("Confirm", GUILayout.Width(82f)))
+                {
+                    ExecuteButtonAction(entry, state, label);
+                    state.ClearActionConfirmation();
+                }
+
+                if (GUILayout.Button("Cancel", GUILayout.Width(72f)))
+                {
+                    state.ClearActionConfirmation();
+                    state.SetStatus($"{label} cancelled.");
+                }
+
+                GUILayout.EndHorizontal();
+                return;
+            }
 
             if (GUILayout.Button(label, GUILayout.Width(180f)))
             {
-                try
+                if (entry.RequiresConfirmation)
                 {
-                    entry.ExecuteAction();
-                    state.SetStatus($"{label} executed.");
+                    state.RequestActionConfirmation(actionKey);
+                    state.SetStatus($"{label} needs confirmation.");
                 }
-                catch (Exception exception)
+                else
                 {
-                    Debug.LogException(exception);
-                    state.SetStatus($"{label} failed.", true);
+                    ExecuteButtonAction(entry, state, label);
                 }
             }
 
             GUILayout.EndHorizontal();
+        }
+
+        private static void ExecuteButtonAction(LensEntry entry, LensConsoleState state, string label)
+        {
+            try
+            {
+                entry.ExecuteAction();
+                state.SetStatus($"{label} executed.");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                state.SetStatus($"{label} failed.", true);
+            }
         }
     }
 }

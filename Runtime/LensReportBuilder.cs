@@ -14,6 +14,8 @@ namespace KostasBan.Lens
             builder.AppendLine("Lens Debug Report");
             builder.Append("Generated: ");
             builder.AppendLine(DateTime.UtcNow.ToString("O"));
+            builder.Append("Lens Version: ");
+            builder.AppendLine(LensPackageInfo.Version);
             builder.AppendLine();
 
             if (providers == null)
@@ -70,7 +72,7 @@ namespace KostasBan.Lens
                     return;
                 }
 
-                builder.AppendLine(entry.Value);
+                builder.AppendLine(entry.DisplayValue);
             }
             catch (Exception exception)
             {

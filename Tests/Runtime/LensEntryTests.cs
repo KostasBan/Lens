@@ -12,6 +12,7 @@ namespace KostasBan.Lens.Tests
 
             Assert.AreEqual("Coins", entry.Key);
             Assert.AreEqual("120", entry.Value);
+            Assert.AreEqual("120", entry.DisplayValue);
             Assert.AreEqual(LensEntryKind.ReadOnly, entry.Kind);
         }
 
@@ -63,6 +64,35 @@ namespace KostasBan.Lens.Tests
             entry.ExecuteAction();
 
             Assert.IsTrue(invoked);
+        }
+
+        [Test]
+        public void SensitiveEntryKeepsRawValueButDisplaysRedactedValue()
+        {
+            var entry = new LensEntry("Token", "secret-token", true);
+
+            Assert.IsTrue(entry.IsSensitive);
+            Assert.AreEqual("secret-token", entry.Value);
+            Assert.AreEqual(LensEntry.DefaultRedactedValue, entry.DisplayValue);
+        }
+
+        [Test]
+        public void SensitiveMutableEntryDisplaysRedactedValue()
+        {
+            var value = "secret-token";
+            var entry = LensEntry.Text("Token", () => value, next => value = next, true, "[hidden]");
+
+            Assert.AreEqual("secret-token", entry.Value);
+            Assert.AreEqual("[hidden]", entry.DisplayValue);
+        }
+
+        [Test]
+        public void ButtonEntryCanRequireConfirmation()
+        {
+            var entry = LensEntry.Button("Unlock Content", () => { }, true, "Unlock everything?");
+
+            Assert.IsTrue(entry.RequiresConfirmation);
+            Assert.AreEqual("Unlock everything?", entry.ConfirmationMessage);
         }
 
         [Test]

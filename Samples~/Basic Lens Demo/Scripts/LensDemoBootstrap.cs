@@ -14,6 +14,11 @@ public sealed class LensDemoBootstrap : MonoBehaviour
 
     private void Awake()
     {
+        if (!LensRuntimePolicy.IsAllowed)
+        {
+            return;
+        }
+
         LensSectionRegistry.Clear();
 
         foreach (var provider in providers)

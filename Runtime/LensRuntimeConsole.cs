@@ -17,15 +17,20 @@ namespace KostasBan.Lens
         private readonly LensEntryDrawer entryDrawer = new LensEntryDrawer();
         private readonly LensGuiStyles styles = new LensGuiStyles();
 
+        internal bool IsOpen => state.IsOpen;
+
         private void Awake()
         {
-            // Lens is intended for Editor, Development Builds, or explicit LENS_ENABLED builds.
-            // A later version can wrap initialization with UNITY_EDITOR || DEVELOPMENT_BUILD || LENS_ENABLED.
             DontDestroyOnLoad(gameObject);
         }
 
         public void Open()
         {
+            if (!LensRuntimePolicy.IsAllowed)
+            {
+                return;
+            }
+
             state.Open();
         }
 
@@ -36,11 +41,22 @@ namespace KostasBan.Lens
 
         public void Toggle()
         {
+            if (!LensRuntimePolicy.IsAllowed)
+            {
+                return;
+            }
+
             state.Toggle();
         }
 
         private void OnGUI()
         {
+            if (!LensRuntimePolicy.IsAllowed)
+            {
+                state.Close();
+                return;
+            }
+
             styles.EnsureInitialized();
             HandleToggleEvent(Event.current);
 
@@ -247,7 +263,7 @@ namespace KostasBan.Lens
         {
             if (GUILayout.Button(string.IsNullOrWhiteSpace(floatingButtonLabel) ? "Lens" : floatingButtonLabel))
             {
-                state.Open();
+                Open();
             }
 
             GUI.DragWindow(new Rect(0f, 0f, 10000f, 10000f));
