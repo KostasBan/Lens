@@ -84,6 +84,8 @@ yield return LensEntry.Button("Open Debug Console", debugConsole.Show);
 
 ## Report Behavior
 
-Lens reports read current values from callbacks. Action buttons are listed as available actions and are not executed while generating reports. Sensitive entries are emitted as `[redacted]`, and search does not match their raw values.
+Lens text and JSON reports read current values from callbacks. Action buttons are listed as available actions and are not executed while generating reports. Sensitive entries are emitted as `[redacted]`, and search does not match their raw values.
+
+Use `Capture Screenshot` when QA needs visual evidence alongside the provider report. Screenshots are local artifacts saved under `Application.persistentDataPath/LensReports`; Lens does not upload or submit them.
 
 Lens intentionally fails fast. Do not hide provider, report, action, or custom drawer exceptions unless the consuming project has a very specific reason to do so.

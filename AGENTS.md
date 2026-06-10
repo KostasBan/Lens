@@ -64,5 +64,7 @@ Use `LensEntryDrawContext.IsCompact` and logical screen metrics when writing cus
 - Sample scene compiles.
 - README examples still match the public API.
 - Reports never execute action entries.
+- Text and JSON reports preserve redaction rules.
 - Reports and search do not expose raw sensitive values.
+- Screenshot capture remains local-only.
 - Custom drawer registrations are explicit and easy to audit.

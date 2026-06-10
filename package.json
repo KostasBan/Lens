@@ -1,6 +1,6 @@
 {
   "name": "com.kostasban.lens",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "displayName": "Lens Runtime Debug Console",
   "description": "A small provider-based runtime debug console for Unity development and QA builds.",
   "unity": "6000.3",

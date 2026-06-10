@@ -23,7 +23,7 @@ Install the package, add a provider, register it during bootstrap, then open Len
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay.
 
-V0.6 is deliberately small, extensible, and responsive:
+V0.7 is deliberately small, extensible, responsive, and easier to attach to QA reports:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -40,7 +40,9 @@ V0.6 is deliberately small, extensible, and responsive:
 - Internal-build enablement policy
 - Sensitive entry redaction
 - Optional confirmation for action buttons
-- Copy-to-clipboard debug report
+- Copy-to-clipboard text debug report
+- Copy-to-clipboard JSON debug report
+- Local screenshot capture for QA evidence
 - Basic sample scene
 - Runtime-safe package tests
 
@@ -79,7 +81,7 @@ Or add this entry to your Unity project's `Packages/manifest.json`:
 4. Open `LensDemo`.
 5. Press Play.
 6. Press `F1` or click the floating `Lens` button to open or close Lens.
-7. Click `Copy Debug Report` to copy the current section data.
+7. Click `Copy Text`, `Copy JSON`, or `Capture Screenshot` to collect QA evidence.
 
 Lens handles the toggle through IMGUI events, so it does not require the legacy Input Manager or the new Input System package.
 
@@ -255,12 +257,12 @@ Redaction is a safety aid, not a security boundary. Do not expose secrets, auth 
 
 ## Debug Reports
 
-Lens builds a readable plain text report from the currently registered providers:
+Lens builds readable plain text and JSON reports from the currently registered providers:
 
 ```text
 Lens Debug Report
 Generated: 2026-06-09T12:30:00.0000000Z
-Lens Version: 0.6.0
+Lens Version: 0.7.0
 
 [Build Info]
 App Version: 0.1.0
@@ -274,6 +276,44 @@ This is useful for QA bug reports, staging checks, and quick developer handoffs.
 
 Interactive values are reported using their current callback values. Action buttons are listed as available actions and are never executed while building a report.
 Sensitive values are reported as `[redacted]`.
+
+The console footer provides:
+
+- `Copy Text` for a human-readable report.
+- `Copy JSON` for structured QA or automation handoff.
+- `Capture Screenshot` for a local PNG saved under `Application.persistentDataPath/LensReports`; the screenshot path is copied to the clipboard.
+
+JSON reports use this shape:
+
+```json
+{
+  "generatedUtc": "2026-06-09T12:30:00.0000000Z",
+  "lensVersion": "0.7.0",
+  "screenshotPath": "",
+  "sections": [
+    {
+      "title": "Build Info",
+      "entries": [
+        {
+          "key": "App Version",
+          "kind": "ReadOnly",
+          "value": "0.1.0",
+          "isSensitive": false,
+          "isAction": false,
+          "info": ""
+        }
+      ]
+    }
+  ]
+}
+```
+
+Code can also request a specific report format:
+
+```csharp
+var text = LensReportBuilder.BuildReport(LensSectionRegistry.Providers, LensReportFormat.Text);
+var json = LensReportBuilder.BuildReport(LensSectionRegistry.Providers, LensReportFormat.Json);
+```
 
 ## Production Notes
 
@@ -297,18 +337,18 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V0.6.
+These integrations are intentionally out of scope for V0.7.
 
 ## Roadmap
 
 Potential future features:
 
 - Screenshots and visual README assets
-- JSON export
-- Screenshot capture
 - Local flag overrides
 - Secure activation gesture
 - Production-safe redaction rules
+- Console log capture
+- Bug report form or backend handoff
 - Optional adapters for project DI patterns such as Zenject
 - Optional richer UI path if IMGUI becomes limiting
 

@@ -33,7 +33,7 @@ Use package versions to communicate intent:
 - Minor: additive public API or sample improvements.
 - Major: breaking public API changes.
 
-Tag releases with the package version, for example `v0.6.0`.
+Tag releases with the package version, for example `v0.7.0`.
 
 ## Safety
 

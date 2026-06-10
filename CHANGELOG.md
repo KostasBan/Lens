@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 - QA Evidence Bundle
+
+- Added JSON debug report export.
+- Added local screenshot capture for QA evidence.
+- Added report footer actions for copying text, copying JSON, and capturing screenshots.
+- Included optional screenshot path metadata in text and JSON reports.
+- Documented report artifact location and QA usage.
+
 ## 0.6.0 - Responsive Mobile Layout
 
 - Added automatic DPI/screen-based IMGUI scaling.

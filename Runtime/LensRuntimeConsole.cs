@@ -240,11 +240,7 @@ namespace KostasBan.Lens
 
             if (metrics.IsCompact)
             {
-                if (GUILayout.Button("Copy Debug Report", GUILayout.Width(metrics.PrimaryButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
-                {
-                    GUIUtility.systemCopyBuffer = LensReportBuilder.BuildReport(LensSectionRegistry.Providers);
-                    state.SetStatus("Report copied.");
-                }
+                DrawCompactReportButtons(metrics);
 
                 GUILayout.BeginHorizontal();
                 if (state.HasStatus)
@@ -260,11 +256,9 @@ namespace KostasBan.Lens
 
             GUILayout.BeginHorizontal();
 
-            if (GUILayout.Button("Copy Debug Report", GUILayout.Width(metrics.PrimaryButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
-            {
-                GUIUtility.systemCopyBuffer = LensReportBuilder.BuildReport(LensSectionRegistry.Providers);
-                state.SetStatus("Report copied.");
-            }
+            DrawReportButton("Copy Text", CopyTextReport, metrics.PrimaryButtonWidth, metrics);
+            DrawReportButton("Copy JSON", CopyJsonReport, metrics.PrimaryButtonWidth, metrics);
+            DrawReportButton("Screenshot", CaptureScreenshot, metrics.PrimaryButtonWidth, metrics);
 
             if (state.HasStatus)
             {
@@ -274,6 +268,43 @@ namespace KostasBan.Lens
             GUILayout.FlexibleSpace();
             GUILayout.Label($"Toggle: {toggleKey}", styles.Status);
             GUILayout.EndHorizontal();
+        }
+
+        private void DrawCompactReportButtons(LensLayoutMetrics metrics)
+        {
+            GUILayout.BeginHorizontal();
+            DrawReportButton("Copy Text", CopyTextReport, metrics.PrimaryButtonWidth, metrics);
+            DrawReportButton("Copy JSON", CopyJsonReport, metrics.PrimaryButtonWidth, metrics);
+            GUILayout.EndHorizontal();
+
+            DrawReportButton("Capture Screenshot", CaptureScreenshot, metrics.PrimaryButtonWidth * 2f, metrics);
+        }
+
+        private void DrawReportButton(string label, Action action, float width, LensLayoutMetrics metrics)
+        {
+            if (GUILayout.Button(label, GUILayout.Width(width), GUILayout.MinHeight(metrics.ControlHeight)))
+            {
+                action();
+            }
+        }
+
+        private void CopyTextReport()
+        {
+            GUIUtility.systemCopyBuffer = LensReportBuilder.BuildTextReport(LensSectionRegistry.Providers);
+            state.SetStatus("Text report copied.");
+        }
+
+        private void CopyJsonReport()
+        {
+            GUIUtility.systemCopyBuffer = LensReportBuilder.BuildJsonReport(LensSectionRegistry.Providers);
+            state.SetStatus("JSON report copied.");
+        }
+
+        private void CaptureScreenshot()
+        {
+            var screenshot = LensReportCapture.CaptureScreenshot();
+            GUIUtility.systemCopyBuffer = screenshot.Path;
+            state.SetStatus($"Screenshot path copied: {screenshot.Path}");
         }
 
         private void DrawFloatingButton(LensLayoutMetrics metrics)
