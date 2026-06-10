@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 - Extensible Rich Entries
+
+- Added custom entry drawer registry and custom entry payload support.
+- Added info text, sliders, single-select, multi-select, and progress entries.
+- Changed Lens runtime/report/action behavior to fail fast instead of swallowing exceptions.
+- Clarified value-change callbacks and commit behavior for editable entries.
+- Updated sample controls and removed the intentional failing sample action.
+
 ## 0.4.0 - Production Safety
 
 - Added `LensRuntimePolicy` for explicit internal-build enablement.

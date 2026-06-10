@@ -35,5 +35,16 @@ namespace KostasBan.Lens.Tests
             Assert.IsTrue(filter.MatchesEntry(entry, "redacted"));
             Assert.IsFalse(filter.MatchesEntry(entry, "secret-token"));
         }
+
+        [Test]
+        public void MatchesEntryInfoTextAndCustomSearchText()
+        {
+            var filter = new LensEntryFilter();
+            var info = LensEntry.ReadOnly("Rollout", "35%", "Percentage of players in the experiment.");
+            var custom = LensEntry.Custom("Custom", "sample", new { Id = 7 }, _ => "Visible", _ => "Hidden Search Text");
+
+            Assert.IsTrue(filter.MatchesEntry(info, "experiment"));
+            Assert.IsTrue(filter.MatchesEntry(custom, "hidden"));
+        }
     }
 }

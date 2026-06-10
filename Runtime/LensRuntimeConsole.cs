@@ -154,24 +154,16 @@ namespace KostasBan.Lens
             entryBuffer.Clear();
             visibleEntries.Clear();
 
-            try
+            foreach (var entry in provider.GetEntries())
             {
-                foreach (var entry in provider.GetEntries())
-                {
-                    entryBuffer.Add(entry);
-                }
-            }
-            catch (Exception exception)
-            {
-                Debug.LogException(exception);
-                entryBuffer.Add(new LensEntry("Error", "Provider failed while reading entries."));
+                entryBuffer.Add(entry);
             }
 
             var sectionMatchesSearch = filter.MatchesSection(sectionTitle, state.SearchText);
 
             foreach (var entry in entryBuffer)
             {
-                if (!state.HasSearch || sectionMatchesSearch || EntryMatchesSearch(entry))
+                if (!state.HasSearch || sectionMatchesSearch || filter.MatchesEntry(entry, state.SearchText))
                 {
                     visibleEntries.Add(entry);
                 }
@@ -198,34 +190,10 @@ namespace KostasBan.Lens
 
             foreach (var entry in visibleEntries)
             {
-                try
-                {
-                    entryDrawer.Draw(entry, sectionTitle, state, styles);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogException(exception);
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label(entry.Key, styles.Key, GUILayout.Width(190f));
-                    GUILayout.Label("Entry failed while drawing.", styles.ErrorStatus);
-                    GUILayout.EndHorizontal();
-                }
+                entryDrawer.Draw(entry, sectionTitle, state, styles);
             }
 
             GUILayout.Space(10f);
-        }
-
-        private bool EntryMatchesSearch(LensEntry entry)
-        {
-            try
-            {
-                return filter.MatchesEntry(entry, state.SearchText);
-            }
-            catch (Exception exception)
-            {
-                Debug.LogException(exception);
-                return true;
-            }
         }
 
         private void DrawFooter()

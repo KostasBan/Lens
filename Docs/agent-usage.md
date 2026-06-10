@@ -43,6 +43,7 @@ public sealed class EconomyLensSection : ILensSectionProvider
         yield return new LensEntry("Coins", economy.Coins.ToString());
         yield return LensEntry.Toggle("Double Rewards", () => economy.DoubleRewards, value => economy.DoubleRewards = value);
         yield return LensEntry.Text("Session Token", () => economy.SessionToken, value => economy.SessionToken = value, true);
+        yield return LensEntry.Progress("Wallet Sync", () => economy.SyncedItems, () => economy.TotalItems, "Items");
         yield return LensEntry.Button("Grant Test Coins", () => economy.GrantCoins(100), true, "Grant 100 test coins?");
     }
 }
@@ -63,7 +64,11 @@ Use mutable entries only when changing the value is useful for testing and the o
 - `LensEntry.Toggle` for feature flags and booleans.
 - `LensEntry.Text` for labels, environment names, IDs safe to share, or debug strings.
 - `LensEntry.Number` for tuning values.
+- `LensEntry.Slider` for bounded float tuning values.
+- `LensEntry.SingleSelect<T>` and `LensEntry.MultiSelect<T>` for labeled option sets.
+- `LensEntry.Progress` for read-only progress toward a known total.
 - `LensEntry.Button` for explicit debug actions.
+- `LensEntry.Custom` plus `LensEntryDrawerRegistry` for project-specific IMGUI controls.
 
 Do not expose destructive actions with vague names. Prefer labels like `Reset Local Tutorial State` over `Reset`.
 Mark useful sensitive values as redacted with the `isSensitive` overload. Use confirmation for actions that mutate progression, inventory, account state, save data, tutorial state, or content unlocks.
@@ -79,3 +84,5 @@ yield return LensEntry.Button("Open Debug Console", debugConsole.Show);
 ## Report Behavior
 
 Lens reports read current values from callbacks. Action buttons are listed as available actions and are not executed while generating reports. Sensitive entries are emitted as `[redacted]`, and search does not match their raw values.
+
+Lens intentionally fails fast. Do not hide provider, report, action, or custom drawer exceptions unless the consuming project has a very specific reason to do so.

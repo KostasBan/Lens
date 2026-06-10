@@ -43,6 +43,7 @@ yield return LensEntry.Button("Unlock Debug Content", system.UnlockDebugContent,
 
 Lens should render and invoke callbacks; the consuming system should own state, validation, permissions, and side effects.
 Use redaction for values that help QA but should not appear raw in the overlay or reports. Use confirmation for progression, inventory, account, save, tutorial, or content-unlock actions.
+Use `LensOption<T>` labels for option entries, and use `LensEntry.Custom` plus `LensEntryDrawerRegistry` for project-owned controls that do not belong in Lens core.
 
 ## Repo Rules
 
@@ -50,6 +51,7 @@ Use redaction for values that help QA but should not appear raw in the overlay o
 - Keep tests under `Tests/Runtime/`.
 - Do not add external runtime dependencies without a clear package-level decision.
 - Preserve `new LensEntry(string key, string value)` compatibility.
+- Preserve fail-fast behavior for provider, action, report, and drawer exceptions.
 - Prefer small focused collaborators over growing `LensRuntimeConsole` into a large class.
 - Validate with Unity `6000.3.16f1` when changing runtime code.
 
@@ -61,3 +63,4 @@ Use redaction for values that help QA but should not appear raw in the overlay o
 - README examples still match the public API.
 - Reports never execute action entries.
 - Reports and search do not expose raw sensitive values.
+- Custom drawer registrations are explicit and easy to audit.

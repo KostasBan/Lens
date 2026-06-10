@@ -96,12 +96,114 @@ namespace KostasBan.Lens.Tests
         }
 
         [Test]
+        public void ButtonActionExceptionsBubble()
+        {
+            var entry = LensEntry.Button("Fail", () => throw new InvalidOperationException("Action failed."));
+
+            Assert.Throws<InvalidOperationException>(() => entry.ExecuteAction());
+        }
+
+        [Test]
+        public void InfoTextIsOptionalMetadata()
+        {
+            var entry = LensEntry.ReadOnly("Flag", "Enabled", "Explains the flag.");
+
+            Assert.IsTrue(entry.HasInfo);
+            Assert.AreEqual("Explains the flag.", entry.InfoText);
+        }
+
+        [Test]
+        public void SliderClampsAndSnapsValues()
+        {
+            var value = 42f;
+            var entry = LensEntry.Slider("Rollout", () => value, next => value = next, 0f, 100f, 5f, "0");
+
+            entry.SetSliderValue(43f);
+
+            Assert.AreEqual(45f, value);
+            Assert.AreEqual("45", entry.Value);
+        }
+
+        [Test]
+        public void SingleSelectUsesOptionLabelsAndCommitsSelection()
+        {
+            var value = "dev";
+            var options = new[]
+            {
+                new LensOption<string>("dev", "Development"),
+                new LensOption<string>("stage", "Staging")
+            };
+            var entry = LensEntry.SingleSelect("Environment", () => value, next => value = next, options);
+
+            Assert.AreEqual("Development", entry.Value);
+
+            entry.SetSingleOption(1);
+
+            Assert.AreEqual("stage", value);
+            Assert.AreEqual("Staging", entry.Value);
+        }
+
+        [Test]
+        public void MultiSelectFormatsSelectionState()
+        {
+            var values = new System.Collections.Generic.List<string>();
+            var options = new[]
+            {
+                new LensOption<string>("coins", "Coins"),
+                new LensOption<string>("gems", "Gems"),
+                new LensOption<string>("boosters", "Boosters")
+            };
+            var entry = LensEntry.MultiSelect("Rewards", () => values, next =>
+            {
+                values.Clear();
+                values.AddRange(next);
+            }, options);
+
+            Assert.AreEqual("None", entry.Value);
+
+            entry.SetMultiOptions(new[] { true, false, false });
+            Assert.AreEqual("Coins", entry.Value);
+
+            entry.SetMultiOptions(new[] { true, true, false });
+            Assert.AreEqual("Mixed...", entry.Value);
+
+            entry.SetMultiOptions(new[] { true, true, true });
+            Assert.AreEqual("Everything", entry.Value);
+        }
+
+        [Test]
+        public void ProgressFormatsCurrentMaxAndPercent()
+        {
+            var entry = LensEntry.Progress("Download", () => 50f, () => 100f, "Catalog");
+
+            Assert.AreEqual(0.5f, entry.GetProgressRatio());
+            StringAssert.Contains("Catalog: 50 / 100 (50%)", entry.Value);
+        }
+
+        [Test]
+        public void CustomEntryUsesCallbacks()
+        {
+            var entry = LensEntry.Custom("Custom", "sample", 12, payload => $"Display {payload}", payload => $"Search {payload}", payload => $"Report {payload}");
+
+            Assert.AreEqual(LensEntryKind.Custom, entry.Kind);
+            Assert.AreEqual("sample", entry.CustomTypeId);
+            Assert.AreEqual("Display 12", entry.DisplayValue);
+            Assert.AreEqual("Search 12", entry.SearchText);
+            Assert.AreEqual("Report 12", entry.ReportValue);
+        }
+
+        [Test]
         public void FactoryMethodsRejectMissingCallbacks()
         {
             Assert.Throws<ArgumentNullException>(() => LensEntry.Toggle("Flag", null, _ => { }));
             Assert.Throws<ArgumentNullException>(() => LensEntry.Text("Text", () => string.Empty, null));
             Assert.Throws<ArgumentNullException>(() => LensEntry.Number("Number", () => 0f, null));
             Assert.Throws<ArgumentNullException>(() => LensEntry.Button("Action", null));
+            Assert.Throws<ArgumentNullException>(() => LensEntry.Slider("Slider", null, _ => { }, 0f, 1f));
+            Assert.Throws<ArgumentNullException>(() => LensEntry.SingleSelect("Select", null, _ => { }, Array.Empty<LensOption<string>>()));
+            Assert.Throws<ArgumentNullException>(() => LensEntry.MultiSelect<string>("Multi", null, _ => { }, Array.Empty<LensOption<string>>()));
+            Assert.Throws<ArgumentNullException>(() => LensEntry.Progress("Progress", null, () => 1f));
+            Assert.Throws<ArgumentException>(() => LensEntry.Custom("Custom", string.Empty, null, _ => string.Empty));
         }
     }
 }

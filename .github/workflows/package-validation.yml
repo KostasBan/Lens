@@ -38,8 +38,12 @@ jobs:
           $requiredPaths = @(
             "Runtime/KostasBan.Lens.asmdef",
             "Runtime/ILensSectionProvider.cs",
+            "Runtime/ILensEntryDrawer.cs",
             "Runtime/LensEntry.cs",
+            "Runtime/LensEntryDrawContext.cs",
+            "Runtime/LensEntryDrawerRegistry.cs",
             "Runtime/LensPackageInfo.cs",
+            "Runtime/LensOption.cs",
             "Runtime/LensRuntimePolicy.cs",
             "Runtime/LensRuntimeConsole.cs",
             "Tests/Runtime/KostasBan.Lens.Tests.asmdef",

@@ -9,7 +9,13 @@ namespace KostasBan.Lens
         private const float StatusDuration = 2f;
 
         private readonly Dictionary<string, bool> expandedSections = new Dictionary<string, bool>();
+        private readonly Dictionary<string, bool> expandedInfo = new Dictionary<string, bool>();
+        private readonly Dictionary<string, bool> expandedPopups = new Dictionary<string, bool>();
+        private readonly Dictionary<string, object> objectStates = new Dictionary<string, object>();
+        private readonly Dictionary<string, string> textDrafts = new Dictionary<string, string>();
         private readonly Dictionary<string, string> numberDrafts = new Dictionary<string, string>();
+        private readonly Dictionary<string, float> sliderDrafts = new Dictionary<string, float>();
+        private readonly Dictionary<string, bool[]> multiSelectDrafts = new Dictionary<string, bool[]>();
 
         private string pendingActionKey = string.Empty;
 
@@ -61,6 +67,33 @@ namespace KostasBan.Lens
             pendingActionKey = string.Empty;
         }
 
+        public bool IsInfoExpanded(string entryId)
+        {
+            return expandedInfo.TryGetValue(entryId ?? string.Empty, out var expanded) && expanded;
+        }
+
+        public void ToggleInfo(string entryId)
+        {
+            var key = entryId ?? string.Empty;
+            expandedInfo[key] = !IsInfoExpanded(key);
+        }
+
+        public bool IsPopupExpanded(string entryId)
+        {
+            return expandedPopups.TryGetValue(entryId ?? string.Empty, out var expanded) && expanded;
+        }
+
+        public void TogglePopup(string entryId)
+        {
+            var key = entryId ?? string.Empty;
+            expandedPopups[key] = !IsPopupExpanded(key);
+        }
+
+        public void ClosePopup(string entryId)
+        {
+            expandedPopups[entryId ?? string.Empty] = false;
+        }
+
         public bool IsSectionExpanded(string sectionTitle)
         {
             return !expandedSections.TryGetValue(sectionTitle ?? string.Empty, out var expanded) || expanded;
@@ -94,6 +127,81 @@ namespace KostasBan.Lens
         public void SetNumberDraft(string key, string value)
         {
             numberDrafts[key] = value ?? string.Empty;
+        }
+
+        public string GetTextDraft(string key, string currentValue)
+        {
+            if (textDrafts.TryGetValue(key, out var draft))
+            {
+                return draft;
+            }
+
+            draft = currentValue ?? string.Empty;
+            textDrafts[key] = draft;
+            return draft;
+        }
+
+        public void SetTextDraft(string key, string value)
+        {
+            textDrafts[key] = value ?? string.Empty;
+        }
+
+        public void ResetTextDraft(string key, string currentValue)
+        {
+            textDrafts[key] = currentValue ?? string.Empty;
+        }
+
+        public float GetSliderDraft(string key, float currentValue)
+        {
+            if (sliderDrafts.TryGetValue(key, out var draft))
+            {
+                return draft;
+            }
+
+            sliderDrafts[key] = currentValue;
+            return currentValue;
+        }
+
+        public void SetSliderDraft(string key, float value)
+        {
+            sliderDrafts[key] = value;
+        }
+
+        public void ResetSliderDraft(string key, float currentValue)
+        {
+            sliderDrafts[key] = currentValue;
+        }
+
+        public bool[] GetMultiSelectDraft(string key, bool[] currentValue)
+        {
+            if (multiSelectDrafts.TryGetValue(key, out var draft) && draft.Length == currentValue.Length)
+            {
+                return draft;
+            }
+
+            draft = (bool[])currentValue.Clone();
+            multiSelectDrafts[key] = draft;
+            return draft;
+        }
+
+        public void SetMultiSelectDraft(string key, bool[] value)
+        {
+            multiSelectDrafts[key] = value != null ? (bool[])value.Clone() : new bool[0];
+        }
+
+        public void ResetMultiSelectDraft(string key, bool[] currentValue)
+        {
+            multiSelectDrafts[key] = currentValue != null ? (bool[])currentValue.Clone() : new bool[0];
+        }
+
+        public T GetObjectState<T>(string key, T fallback)
+        {
+            return objectStates.TryGetValue(key ?? string.Empty, out var value) && value is T typed ? typed : fallback;
+        }
+
+        public void SetObjectState<T>(string key, T value)
+        {
+            objectStates[key ?? string.Empty] = value;
         }
     }
 }

@@ -6,6 +6,11 @@ namespace KostasBan.Lens
         Toggle,
         Text,
         Number,
-        Button
+        Button,
+        Slider,
+        SingleSelect,
+        MultiSelect,
+        Progress,
+        Custom
     }
 }

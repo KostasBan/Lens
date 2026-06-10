@@ -23,7 +23,7 @@ Install the package, add a provider, register it during bootstrap, then open Len
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay.
 
-V0.4 is deliberately small but more production-minded:
+V0.5 is deliberately small but more extensible:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -32,6 +32,9 @@ V0.4 is deliberately small but more production-minded:
 - Search by section, key, value, or action label
 - Provider-based sections
 - Read-only, toggle, text, number, and button entries
+- Slider, single-select, multi-select, and progress entries
+- Custom entry drawers for project-owned controls
+- Optional entry info text
 - Internal-build enablement policy
 - Sensitive entry redaction
 - Optional confirmation for action buttons
@@ -86,7 +89,7 @@ The sample registers five providers:
 - Sample Recent Events
 - Performance
 
-The sample feature flag section includes editable toggles, a text value, a numeric value, action buttons, a redacted sample token, and a confirmed unlock action.
+The sample feature flag section includes editable toggles, text, numbers, a slider, single-select, multi-select, progress, action buttons, a redacted sample token, info text, and a confirmed unlock action.
 
 ## Add A Custom Section
 
@@ -139,6 +142,7 @@ public sealed class DebugSettingsLensSection : ILensSectionProvider
         yield return LensEntry.Toggle("God Mode", () => godMode, value => godMode = value);
         yield return LensEntry.Text("Environment", () => environment, value => environment = value);
         yield return LensEntry.Number("Coin Multiplier", () => coinMultiplier, value => coinMultiplier = value);
+        yield return LensEntry.Slider("Rollout Percent", () => rollout, value => rollout = value, 0f, 100f, 5f);
         yield return LensEntry.Button("Unlock Content", UnlockContent, true, "Unlock all content?");
     }
 
@@ -152,6 +156,48 @@ public sealed class DebugSettingsLensSection : ILensSectionProvider
 Button entries are useful for predefined debug actions, such as unlocking content, resetting tutorial state, opening an internal diagnostics panel, or showing a third-party in-game debug console. Lens does not depend on those tools directly; the consuming project wires that behavior in the callback.
 
 Use confirmation for actions that mutate account, progression, inventory, tutorial, economy, or save state.
+
+Text, number, slider, and multi-select entries draft locally and call setters only when applied. Toggle and single-select entries commit immediately when changed.
+
+## Rich Entries
+
+Use explicit option labels so UI, search, and reports stay stable:
+
+```csharp
+var environments = new[]
+{
+    new LensOption<string>("dev", "Development"),
+    new LensOption<string>("stage", "Staging")
+};
+
+yield return LensEntry.SingleSelect("Environment", () => environment, value => environment = value, environments);
+yield return LensEntry.MultiSelect("Rewards", () => rewards, values => rewards = values.ToList(), rewardOptions);
+yield return LensEntry.Progress("Download", () => downloadedMb, () => totalMb, "Catalog");
+```
+
+Add info text when a value needs context:
+
+```csharp
+yield return LensEntry.Toggle("shop_v2", () => shopV2, value => shopV2 = value, infoText: "Controls the new shop flow.");
+```
+
+## Custom Entries
+
+Register a project-owned IMGUI drawer for custom entry types:
+
+```csharp
+LensEntryDrawerRegistry.Register("my.graph", new MyGraphDrawer());
+
+yield return LensEntry.Custom(
+    "Spawn Graph",
+    "my.graph",
+    payload: graphData,
+    displayValue: payload => "Graph available",
+    searchText: payload => "spawn graph diagnostics",
+    reportValue: payload => "Graph available");
+```
+
+Custom drawer exceptions are not swallowed. Lens is a debug tool, so failures should surface with useful Unity stack traces.
 
 ## Internal Build Policy
 
@@ -191,7 +237,7 @@ Lens builds a readable plain text report from the currently registered providers
 ```text
 Lens Debug Report
 Generated: 2026-06-09T12:30:00.0000000Z
-Lens Version: 0.4.0
+Lens Version: 0.5.0
 
 [Build Info]
 App Version: 0.1.0
@@ -228,7 +274,7 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V0.4.
+These integrations are intentionally out of scope for V0.5.
 
 ## Roadmap
 
@@ -241,6 +287,7 @@ Potential future features:
 - Secure activation gesture
 - Production-safe redaction rules
 - Optional adapters for project DI patterns such as Zenject
+- Optional richer UI path if IMGUI becomes limiting
 
 ## For Agents And Contributors
 

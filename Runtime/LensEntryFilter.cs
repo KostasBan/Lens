@@ -17,8 +17,9 @@ namespace KostasBan.Lens
             }
 
             return Contains(entry.Key, searchText) ||
-                   Contains(entry.DisplayValue, searchText) ||
-                   Contains(entry.ActionLabel, searchText);
+                   Contains(entry.SearchText, searchText) ||
+                   Contains(entry.ActionLabel, searchText) ||
+                   Contains(entry.InfoText, searchText);
         }
 
         private static bool Contains(string value, string searchText)

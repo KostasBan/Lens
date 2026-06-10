@@ -1,7 +1,5 @@
 using System;
 using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace KostasBan.Lens.Tests
 {
@@ -16,7 +14,7 @@ namespace KostasBan.Lens.Tests
             });
 
             StringAssert.Contains("Lens Debug Report", report);
-            StringAssert.Contains("Lens Version: 0.4.0", report);
+            StringAssert.Contains("Lens Version: 0.5.0", report);
             StringAssert.Contains("[Build]", report);
             StringAssert.Contains("Version: 1.2.3", report);
         }
@@ -66,17 +64,24 @@ namespace KostasBan.Lens.Tests
         }
 
         [Test]
-        public void BuildReportHandlesProviderFailures()
+        public void BuildReportBubblesProviderFailures()
         {
-            LogAssert.Expect(LogType.Exception, "InvalidOperationException: Broken provider.");
-
-            var report = LensReportBuilder.BuildReport(new[]
+            Assert.Throws<InvalidOperationException>(() => LensReportBuilder.BuildReport(new[]
             {
                 new ThrowingProvider()
+            }));
+        }
+
+        [Test]
+        public void BuildReportIncludesInfoText()
+        {
+            var report = LensReportBuilder.BuildReport(new[]
+            {
+                new StaticProvider("Info", LensEntry.ReadOnly("Flag", "Enabled", "Shown to explain a value."))
             });
 
-            StringAssert.Contains("[Broken]", report);
-            StringAssert.Contains("Error: Provider failed while generating report.", report);
+            StringAssert.Contains("Flag: Enabled", report);
+            StringAssert.Contains("Info: Shown to explain a value.", report);
         }
 
         private sealed class ThrowingProvider : ILensSectionProvider

@@ -33,7 +33,7 @@ Use package versions to communicate intent:
 - Minor: additive public API or sample improvements.
 - Major: breaking public API changes.
 
-Tag releases with the package version, for example `v0.4.0`.
+Tag releases with the package version, for example `v0.5.0`.
 
 ## Safety
 
@@ -42,3 +42,5 @@ Interactive entries can mutate runtime state. Keep names clear, avoid exposing s
 - Use `LensRuntimePolicy` for internal-build enablement.
 - Mark sensitive values with redaction instead of relying on docs alone.
 - Require confirmation for destructive or hard-to-undo action buttons.
+- Preserve fail-fast debugging behavior unless a future plan explicitly changes it.
+- Keep custom entry support generic; project-specific controls should live in consuming projects.
