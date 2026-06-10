@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 - Repository Trust And Samples
+
+- Added README badges, quick start guidance, and an architecture diagram.
+- Added API overview and internal-build safety documentation.
+- Added GitHub issue templates for bugs, features, and integration questions.
+- Added a dependency-free Provider Cookbook sample.
+- Documented roadmap priorities and repository trust signals.
+
 ## 0.8.0 - Public Portfolio Polish
 
 - Added public-facing design goals to the README.

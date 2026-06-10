@@ -2,6 +2,8 @@
 
 This guide is for coding agents adding or modifying Unity gameplay, config, analytics, QA, or production tooling code in a project that includes Lens.
 
+For the public API surface, see `Docs/api-overview.md`.
+
 ## Default Behavior
 
 When an important runtime value would help QA or developers understand behavior, add or update a Lens section provider instead of relying only on logs.

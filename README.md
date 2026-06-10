@@ -1,8 +1,48 @@
 # Lens Runtime Debug Console
 
+[![Package Validation](https://github.com/KostasBan/Lens/actions/workflows/package-validation.yml/badge.svg)](https://github.com/KostasBan/Lens/actions/workflows/package-validation.yml)
+[![Unity EditMode Tests](https://github.com/KostasBan/Lens/actions/workflows/unity-tests.yml/badge.svg)](https://github.com/KostasBan/Lens/actions/workflows/unity-tests.yml)
+[![Latest Release](https://img.shields.io/github/v/release/KostasBan/Lens?label=release)](https://github.com/KostasBan/Lens/releases)
+
 Lens is a small runtime debug/inspection panel for Unity projects. It gives developers and QA a quick way to inspect useful in-build state without attaching a debugger, rebuilding custom debug menus, or wiring every system directly into one UI.
 
 Lens is intentionally generic: runtime systems register section providers, Lens renders those sections, and QA can copy a useful report for bug reproduction.
+
+## Quick Start
+
+Install Lens from Git:
+
+```json
+{
+  "dependencies": {
+    "com.kostasban.lens": "https://github.com/KostasBan/Lens.git"
+  }
+}
+```
+
+Register a provider during your bootstrap:
+
+```csharp
+using System.Collections.Generic;
+using KostasBan.Lens;
+
+public sealed class MyLensSection : ILensSectionProvider
+{
+    private bool godMode;
+
+    public string SectionTitle => "My Game";
+
+    public IEnumerable<LensEntry> GetEntries()
+    {
+        yield return new LensEntry("Coins", "120");
+        yield return LensEntry.Toggle("God Mode", () => godMode, value => godMode = value);
+    }
+}
+
+LensSectionRegistry.Register(new MyLensSection());
+```
+
+Add `LensRuntimeConsole` to a scene object or create it during bootstrap, then press `F1` or use the floating button.
 
 ## How To Use Lens
 
@@ -23,7 +63,7 @@ Install the package, add a provider, register it during bootstrap, then open Len
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay that can be used in Editor, development builds, staging, QA, and controlled internal builds.
 
-V0.8 is deliberately small, extensible, responsive, and easier to attach to QA reports:
+V0.9 is deliberately small, extensible, responsive, and easier to attach to QA reports:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -44,6 +84,7 @@ V0.8 is deliberately small, extensible, responsive, and easier to attach to QA r
 - Copy-to-clipboard JSON debug report
 - Local screenshot capture for QA evidence
 - Basic sample scene
+- Provider cookbook samples
 - Runtime-safe package tests
 
 ## Design Goals
@@ -56,9 +97,25 @@ Lens is built as a reusable Unity package, not a one-off project debug menu.
 - **QA-focused evidence:** text reports, JSON reports, and local screenshot capture are designed to make bug reproduction easier.
 - **Extensible surface:** rich built-in entries cover common controls, while custom entry drawers let consuming projects add their own tools without expanding Lens core.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Provider["ILensSectionProvider"] --> Registry["LensSectionRegistry"]
+    Registry --> Console["LensRuntimeConsole"]
+    Console --> Drawer["LensEntryDrawer"]
+    Drawer --> Entry["LensEntry controls"]
+    Registry --> Report["LensReportBuilder"]
+    Report --> Text["Text report"]
+    Report --> Json["JSON report"]
+    Console --> Capture["LensReportCapture"]
+```
+
+Providers own data and callbacks. Lens owns rendering, filtering, report generation, and lightweight UI state.
+
 ## Screenshots
 
-Screenshots will be added here once the visual pass is ready.
+Screenshots and video will be added once the visual pass is ready.
 
 ```text
 Docs/images/lens-overlay.png
@@ -104,6 +161,8 @@ The sample registers five providers:
 - Performance
 
 The sample feature flag section includes editable toggles, text, numbers, a slider, single-select, multi-select, progress, action buttons, a redacted sample token, info text, and a confirmed unlock action.
+
+The `Provider Cookbook` sample includes dependency-free provider examples for fake remote config values, fake analytics events, and fake content unlock/debug actions.
 
 ## Add A Custom Section
 
@@ -272,7 +331,7 @@ Lens builds readable plain text and JSON reports from the currently registered p
 ```text
 Lens Debug Report
 Generated: 2026-06-09T12:30:00.0000000Z
-Lens Version: 0.8.0
+Lens Version: 0.9.0
 
 [Build Info]
 App Version: 0.1.0
@@ -298,7 +357,7 @@ JSON reports use this shape:
 ```json
 {
   "generatedUtc": "2026-06-09T12:30:00.0000000Z",
-  "lensVersion": "0.8.0",
+  "lensVersion": "0.9.0",
   "screenshotPath": "",
   "sections": [
     {
@@ -347,17 +406,20 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V0.8.
+These integrations are intentionally out of scope for V0.9.
 
 ## Roadmap
 
-Potential future features:
+Near-term:
 
 - Screenshots and visual README assets
-- Local flag overrides
 - Secure activation gesture
-- Production-safe redaction rules
 - Console log capture
+
+Later:
+
+- Local flag overrides
+- Production-safe redaction rules
 - Bug report form or backend handoff
 - Optional adapters for project DI patterns such as Zenject
 - Optional richer UI path if IMGUI becomes limiting
@@ -365,7 +427,9 @@ Potential future features:
 ## For Agents And Contributors
 
 - See `AGENTS.md` for repo-level coding-agent guidance.
+- See `Docs/api-overview.md` for the public API overview.
 - See `Docs/agent-usage.md` for how agents should expose important runtime values in consuming Unity projects.
+- See `SECURITY.md` for internal-build safety guidance.
 - See `CONTRIBUTING.md` for validation and versioning guidance.
 
 ## License

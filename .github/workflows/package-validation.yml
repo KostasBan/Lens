@@ -51,10 +51,19 @@ jobs:
             "Tests/Runtime/KostasBan.Lens.Tests.asmdef",
             "Samples~/Basic Lens Demo/Scripts/LensDemoBootstrap.cs",
             "README.md",
+            "SECURITY.md",
             "AGENTS.md",
             "Docs/agent-usage.md",
+            "Docs/api-overview.md",
             "CHANGELOG.md",
-            "CONTRIBUTING.md"
+            "CONTRIBUTING.md",
+            "Samples~/Provider Cookbook/Scripts/LensCookbookBootstrap.cs",
+            "Samples~/Provider Cookbook/Scripts/FakeRemoteConfigLensSectionProvider.cs",
+            "Samples~/Provider Cookbook/Scripts/FakeAnalyticsLensSectionProvider.cs",
+            "Samples~/Provider Cookbook/Scripts/FakeContentUnlockLensSectionProvider.cs",
+            ".github/ISSUE_TEMPLATE/bug_report.md",
+            ".github/ISSUE_TEMPLATE/feature_request.md",
+            ".github/ISSUE_TEMPLATE/integration_question.md"
           )
 
           foreach ($path in $requiredPaths) {

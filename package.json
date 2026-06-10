@@ -1,6 +1,6 @@
 {
   "name": "com.kostasban.lens",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "displayName": "Lens Runtime Debug Console",
   "description": "A small provider-based runtime debug console for Unity development and QA builds.",
   "unity": "6000.3",
@@ -12,6 +12,11 @@
       "displayName": "Basic Lens Demo",
       "description": "Minimal scene showing the Lens runtime overlay and built-in sample providers.",
       "path": "Samples~/Basic Lens Demo"
+    },
+    {
+      "displayName": "Provider Cookbook",
+      "description": "Dependency-free sample providers for config, analytics, and debug actions.",
+      "path": "Samples~/Provider Cookbook"
     }
   ],
   "keywords": [

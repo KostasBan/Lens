@@ -40,6 +40,12 @@ The workflow copies the root-level package into a temporary `test-package/` dire
 - Do not add runtime dependencies without documenting why.
 - Do not make Lens depend on game-specific systems such as remote config, analytics, or debug console packages.
 
+## Issues And Safety
+
+Use the GitHub issue templates for bugs, feature requests, and integration questions. Do not paste secrets, private player data, production credentials, or raw sensitive reports into public issues.
+
+See `SECURITY.md` for internal-build safety guidance.
+
 ## Versioning
 
 Use package versions to communicate intent:
@@ -48,7 +54,7 @@ Use package versions to communicate intent:
 - Minor: additive public API or sample improvements.
 - Major: breaking public API changes.
 
-Tag releases with the package version, for example `v0.8.0`.
+Tag releases with the package version, for example `v0.9.0`.
 
 ## Safety
 
