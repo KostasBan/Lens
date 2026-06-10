@@ -33,7 +33,7 @@ Use package versions to communicate intent:
 - Minor: additive public API or sample improvements.
 - Major: breaking public API changes.
 
-Tag releases with the package version, for example `v0.5.0`.
+Tag releases with the package version, for example `v0.6.0`.
 
 ## Safety
 
@@ -44,3 +44,4 @@ Interactive entries can mutate runtime state. Keep names clear, avoid exposing s
 - Require confirmation for destructive or hard-to-undo action buttons.
 - Preserve fail-fast debugging behavior unless a future plan explicitly changes it.
 - Keep custom entry support generic; project-specific controls should live in consuming projects.
+- Avoid new hard-coded UI widths in runtime drawing code; route layout sizing through the responsive metrics layer.

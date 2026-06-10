@@ -72,6 +72,7 @@ Use mutable entries only when changing the value is useful for testing and the o
 
 Do not expose destructive actions with vague names. Prefer labels like `Reset Local Tutorial State` over `Reset`.
 Mark useful sensitive values as redacted with the `isSensitive` overload. Use confirmation for actions that mutate progression, inventory, account state, save data, tutorial state, or content unlocks.
+When writing custom drawers, read `LensEntryDrawContext.IsCompact` and logical screen dimensions so controls stay usable in mobile portrait layouts.
 
 ## Third-Party Debug Panels
 

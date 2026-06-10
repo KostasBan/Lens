@@ -6,16 +6,28 @@ namespace KostasBan.Lens
     {
         private readonly LensConsoleState state;
 
-        internal LensEntryDrawContext(string sectionTitle, string entryId, LensConsoleState state)
+        internal LensEntryDrawContext(string sectionTitle, string entryId, LensConsoleState state, LensLayoutMetrics metrics)
         {
             SectionTitle = sectionTitle ?? string.Empty;
             EntryId = entryId ?? string.Empty;
             this.state = state;
+            UiScale = metrics.UiScale;
+            IsCompact = metrics.IsCompact;
+            LogicalScreenWidth = metrics.LogicalScreenWidth;
+            LogicalScreenHeight = metrics.LogicalScreenHeight;
         }
 
         public string SectionTitle { get; }
 
         public string EntryId { get; }
+
+        public float UiScale { get; }
+
+        public bool IsCompact { get; }
+
+        public float LogicalScreenWidth { get; }
+
+        public float LogicalScreenHeight { get; }
 
         public void SetStatus(string message, bool isError = false)
         {

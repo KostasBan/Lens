@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 - Responsive Mobile Layout
+
+- Added automatic DPI/screen-based IMGUI scaling.
+- Added compact stacked layout for narrow portrait screens.
+- Added runtime scale settings on `LensRuntimeConsole`.
+- Exposed layout info to custom entry drawers.
+- Added tests for scale calculation, compact detection, and floating button clamping.
+
 ## 0.5.0 - Extensible Rich Entries
 
 - Added custom entry drawer registry and custom entry payload support.

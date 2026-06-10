@@ -9,6 +9,10 @@ namespace KostasBan.Lens
         [SerializeField] private KeyCode toggleKey = KeyCode.F1;
         [SerializeField] private bool showFloatingButton = true;
         [SerializeField] private string floatingButtonLabel = "Lens";
+        [SerializeField] private LensUiScaleMode uiScaleMode = LensUiScaleMode.Auto;
+        [SerializeField] private float fixedUiScale = 1f;
+        [SerializeField] private float minAutoScale = 1f;
+        [SerializeField] private float maxAutoScale = 3f;
 
         private readonly List<LensEntry> entryBuffer = new List<LensEntry>();
         private readonly List<LensEntry> visibleEntries = new List<LensEntry>();
@@ -18,6 +22,24 @@ namespace KostasBan.Lens
         private readonly LensGuiStyles styles = new LensGuiStyles();
 
         internal bool IsOpen => state.IsOpen;
+
+        public LensUiScaleMode UiScaleMode
+        {
+            get => uiScaleMode;
+            set => uiScaleMode = value;
+        }
+
+        public float FixedUiScale
+        {
+            get => fixedUiScale;
+            set => fixedUiScale = Mathf.Clamp(value, 0.5f, 4f);
+        }
+
+        public void SetAutoScaleLimits(float minScale, float maxScale)
+        {
+            minAutoScale = Mathf.Max(0.5f, minScale);
+            maxAutoScale = Mathf.Max(minAutoScale, maxScale);
+        }
 
         private void Awake()
         {
@@ -59,14 +81,24 @@ namespace KostasBan.Lens
 
             styles.EnsureInitialized();
             HandleToggleEvent(Event.current);
+            var metrics = LensLayoutMetrics.FromScreen(Screen.width, Screen.height, Screen.dpi, uiScaleMode, fixedUiScale, minAutoScale, maxAutoScale);
+            var previousMatrix = GUI.matrix;
+            GUI.matrix = Matrix4x4.Scale(new Vector3(metrics.UiScale, metrics.UiScale, 1f));
 
-            if (!state.IsOpen)
+            try
             {
-                DrawFloatingButton();
-                return;
-            }
+                if (!state.IsOpen)
+                {
+                    DrawFloatingButton(metrics);
+                    return;
+                }
 
-            DrawPanel();
+                DrawPanel(metrics);
+            }
+            finally
+            {
+                GUI.matrix = previousMatrix;
+            }
         }
 
         private void HandleToggleEvent(Event currentEvent)
@@ -80,39 +112,37 @@ namespace KostasBan.Lens
             currentEvent.Use();
         }
 
-        private void DrawPanel()
+        private void DrawPanel(LensLayoutMetrics metrics)
         {
-            var width = Mathf.Min(Screen.width - 32f, 760f);
-            var height = Mathf.Min(Screen.height - 32f, 620f);
-            var rect = new Rect(16f, 16f, width, height);
+            var rect = metrics.PanelRect;
 
             GUILayout.BeginArea(rect, GUIContent.none, styles.Panel);
             GUILayout.BeginVertical();
 
-            DrawHeader();
-            DrawSearch();
+            DrawHeader(metrics);
+            DrawSearch(metrics);
 
             state.ScrollPosition = GUILayout.BeginScrollView(state.ScrollPosition, GUILayout.ExpandHeight(true));
 
             foreach (var provider in LensSectionRegistry.Providers)
             {
-                DrawProvider(provider);
+                DrawProvider(provider, metrics);
             }
 
             GUILayout.EndScrollView();
-            DrawFooter();
+            DrawFooter(metrics);
 
             GUILayout.EndVertical();
             GUILayout.EndArea();
         }
 
-        private void DrawHeader()
+        private void DrawHeader(LensLayoutMetrics metrics)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Lens", styles.Title);
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button("Close", GUILayout.Width(72f)))
+            if (GUILayout.Button("Close", GUILayout.Width(metrics.SmallButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 state.Close();
             }
@@ -121,19 +151,27 @@ namespace KostasBan.Lens
             GUILayout.Space(8f);
         }
 
-        private void DrawSearch()
+        private void DrawSearch(LensLayoutMetrics metrics)
         {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Search", styles.Key, GUILayout.Width(64f));
+            if (metrics.IsCompact)
+            {
+                GUILayout.Label("Search", styles.Key);
+                GUILayout.BeginHorizontal();
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Search", styles.Key, GUILayout.Width(metrics.SearchLabelWidth));
+            }
 
-            var nextSearch = GUILayout.TextField(state.SearchText, styles.SearchField);
+            var nextSearch = GUILayout.TextField(state.SearchText, styles.SearchField, GUILayout.MinHeight(metrics.ControlHeight));
 
             if (!string.Equals(nextSearch, state.SearchText, StringComparison.Ordinal))
             {
                 state.SearchText = nextSearch ?? string.Empty;
             }
 
-            if (!string.IsNullOrEmpty(state.SearchText) && GUILayout.Button("Clear", GUILayout.Width(58f)))
+            if (!string.IsNullOrEmpty(state.SearchText) && GUILayout.Button("Clear", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 state.SearchText = string.Empty;
             }
@@ -142,7 +180,7 @@ namespace KostasBan.Lens
             GUILayout.Space(8f);
         }
 
-        private void DrawProvider(ILensSectionProvider provider)
+        private void DrawProvider(ILensSectionProvider provider, LensLayoutMetrics metrics)
         {
             if (provider == null)
             {
@@ -177,7 +215,7 @@ namespace KostasBan.Lens
             var expanded = state.HasSearch || state.IsSectionExpanded(sectionTitle);
             var marker = expanded ? "[-]" : "[+]";
 
-            if (GUILayout.Button($"{marker} {sectionTitle} ({visibleEntries.Count})", styles.SectionHeader))
+            if (GUILayout.Button($"{marker} {sectionTitle} ({visibleEntries.Count})", styles.SectionHeader, GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 state.ToggleSection(sectionTitle);
             }
@@ -190,18 +228,39 @@ namespace KostasBan.Lens
 
             foreach (var entry in visibleEntries)
             {
-                entryDrawer.Draw(entry, sectionTitle, state, styles);
+                entryDrawer.Draw(entry, sectionTitle, state, styles, metrics);
             }
 
             GUILayout.Space(10f);
         }
 
-        private void DrawFooter()
+        private void DrawFooter(LensLayoutMetrics metrics)
         {
             GUILayout.Space(6f);
+
+            if (metrics.IsCompact)
+            {
+                if (GUILayout.Button("Copy Debug Report", GUILayout.Width(metrics.PrimaryButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
+                {
+                    GUIUtility.systemCopyBuffer = LensReportBuilder.BuildReport(LensSectionRegistry.Providers);
+                    state.SetStatus("Report copied.");
+                }
+
+                GUILayout.BeginHorizontal();
+                if (state.HasStatus)
+                {
+                    GUILayout.Label(state.StatusMessage, state.StatusIsError ? styles.ErrorStatus : styles.Status);
+                }
+
+                GUILayout.FlexibleSpace();
+                GUILayout.Label($"Toggle: {toggleKey}", styles.Status);
+                GUILayout.EndHorizontal();
+                return;
+            }
+
             GUILayout.BeginHorizontal();
 
-            if (GUILayout.Button("Copy Debug Report", GUILayout.Width(160f)))
+            if (GUILayout.Button("Copy Debug Report", GUILayout.Width(metrics.PrimaryButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 GUIUtility.systemCopyBuffer = LensReportBuilder.BuildReport(LensSectionRegistry.Providers);
                 state.SetStatus("Report copied.");
@@ -217,14 +276,16 @@ namespace KostasBan.Lens
             GUILayout.EndHorizontal();
         }
 
-        private void DrawFloatingButton()
+        private void DrawFloatingButton(LensLayoutMetrics metrics)
         {
             if (!showFloatingButton)
             {
                 return;
             }
 
+            state.FloatingButtonRect = metrics.ClampFloatingButton(state.FloatingButtonRect);
             state.FloatingButtonRect = GUI.Window(GetInstanceID(), state.FloatingButtonRect, DrawFloatingButtonWindow, GUIContent.none, styles.FloatingButtonWindow);
+            state.FloatingButtonRect = metrics.ClampFloatingButton(state.FloatingButtonRect);
         }
 
         private void DrawFloatingButtonWindow(int windowId)

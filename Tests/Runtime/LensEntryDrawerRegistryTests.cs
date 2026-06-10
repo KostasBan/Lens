@@ -34,8 +34,9 @@ namespace KostasBan.Lens.Tests
 
             var entry = LensEntry.Custom("Custom", "throwing", null, _ => "Display");
             var drawer = new LensEntryDrawer();
+            var metrics = LensLayoutMetrics.FromScreen(1920, 1080, 96f, LensUiScaleMode.Auto, 1f, 1f, 3f);
 
-            Assert.Throws<System.InvalidOperationException>(() => drawer.Draw(entry, "Custom", new LensConsoleState(), new LensGuiStyles()));
+            Assert.Throws<System.InvalidOperationException>(() => drawer.Draw(entry, "Custom", new LensConsoleState(), new LensGuiStyles(), metrics));
         }
 
         private sealed class NoopDrawer : ILensEntryDrawer

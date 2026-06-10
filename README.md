@@ -17,13 +17,13 @@ Common examples:
 - expose performance counters,
 - add safe action buttons for project-owned debug tools.
 
-Install the package, add a provider, register it during bootstrap, then open Lens with `F1` or the floating `Lens` button.
+Install the package, add a provider, register it during bootstrap, then open Lens with `F1` or the floating `Lens` button. On mobile portrait screens, Lens scales up automatically and switches to a compact stacked layout.
 
 ## Why Lens Exists
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay.
 
-V0.5 is deliberately small but more extensible:
+V0.6 is deliberately small, extensible, and responsive:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -35,6 +35,8 @@ V0.5 is deliberately small but more extensible:
 - Slider, single-select, multi-select, and progress entries
 - Custom entry drawers for project-owned controls
 - Optional entry info text
+- Automatic DPI/screen-aware IMGUI scaling
+- Compact stacked layout for mobile portrait screens
 - Internal-build enablement policy
 - Sensitive entry redaction
 - Optional confirmation for action buttons
@@ -199,6 +201,27 @@ yield return LensEntry.Custom(
 
 Custom drawer exceptions are not swallowed. Lens is a debug tool, so failures should surface with useful Unity stack traces.
 
+Custom drawers can inspect `LensEntryDrawContext.UiScale`, `IsCompact`, `LogicalScreenWidth`, and `LogicalScreenHeight` to adapt their own IMGUI controls.
+
+## Responsive UI
+
+Lens defaults to automatic scaling:
+
+```csharp
+var console = gameObject.AddComponent<LensRuntimeConsole>();
+console.UiScaleMode = LensUiScaleMode.Auto;
+```
+
+For project-specific tuning, use fixed scale or auto-scale clamps:
+
+```csharp
+console.UiScaleMode = LensUiScaleMode.Fixed;
+console.FixedUiScale = 1.5f;
+console.SetAutoScaleLimits(1f, 3f);
+```
+
+The default auto mode uses DPI when available, falls back to portrait screen size when DPI is unavailable, and clamps scale to avoid unreadably small or oversized UI.
+
 ## Internal Build Policy
 
 Lens is enabled by default only for Editor, Development Build, or builds compiled with `LENS_ENABLED`:
@@ -237,7 +260,7 @@ Lens builds a readable plain text report from the currently registered providers
 ```text
 Lens Debug Report
 Generated: 2026-06-09T12:30:00.0000000Z
-Lens Version: 0.5.0
+Lens Version: 0.6.0
 
 [Build Info]
 App Version: 0.1.0
@@ -274,7 +297,7 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V0.5.
+These integrations are intentionally out of scope for V0.6.
 
 ## Roadmap
 
