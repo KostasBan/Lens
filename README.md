@@ -1,8 +1,8 @@
 # Lens Runtime Debug Console
 
-Lens is a small runtime debug/inspection panel for Unity projects. It gives developers and QA a quick way to inspect useful in-build state without attaching a debugger or wiring every system directly into one UI.
+Lens is a small runtime debug/inspection panel for Unity projects. It gives developers and QA a quick way to inspect useful in-build state without attaching a debugger, rebuilding custom debug menus, or wiring every system directly into one UI.
 
-Lens is intentionally generic. Runtime systems register section providers, Lens renders those sections, and QA can copy a readable debug report for bug reproduction.
+Lens is intentionally generic: runtime systems register section providers, Lens renders those sections, and QA can copy a useful report for bug reproduction.
 
 ## How To Use Lens
 
@@ -21,9 +21,9 @@ Install the package, add a provider, register it during bootstrap, then open Len
 
 ## Why Lens Exists
 
-Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay.
+Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay that can be used in Editor, development builds, staging, QA, and controlled internal builds.
 
-V0.7 is deliberately small, extensible, responsive, and easier to attach to QA reports:
+V0.8 is deliberately small, extensible, responsive, and easier to attach to QA reports:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -45,6 +45,16 @@ V0.7 is deliberately small, extensible, responsive, and easier to attach to QA r
 - Local screenshot capture for QA evidence
 - Basic sample scene
 - Runtime-safe package tests
+
+## Design Goals
+
+Lens is built as a reusable Unity package, not a one-off project debug menu.
+
+- **Provider-owned data:** systems expose their own sections through `ILensSectionProvider`; Lens does not depend on feature flags, analytics, remote config, or game-specific services.
+- **Small dependency-free runtime:** the package uses IMGUI and plain callbacks so it can be dropped into existing Unity projects without pulling in UI frameworks, DI containers, or backend assumptions.
+- **Production-aware by default:** runtime policy, redaction, confirmation prompts, and fail-fast debugging keep Lens useful for internal builds without pretending to be a security boundary.
+- **QA-focused evidence:** text reports, JSON reports, and local screenshot capture are designed to make bug reproduction easier.
+- **Extensible surface:** rich built-in entries cover common controls, while custom entry drawers let consuming projects add their own tools without expanding Lens core.
 
 ## Screenshots
 
@@ -262,7 +272,7 @@ Lens builds readable plain text and JSON reports from the currently registered p
 ```text
 Lens Debug Report
 Generated: 2026-06-09T12:30:00.0000000Z
-Lens Version: 0.7.0
+Lens Version: 0.8.0
 
 [Build Info]
 App Version: 0.1.0
@@ -288,7 +298,7 @@ JSON reports use this shape:
 ```json
 {
   "generatedUtc": "2026-06-09T12:30:00.0000000Z",
-  "lensVersion": "0.7.0",
+  "lensVersion": "0.8.0",
   "screenshotPath": "",
   "sections": [
     {
@@ -337,7 +347,7 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V0.7.
+These integrations are intentionally out of scope for V0.8.
 
 ## Roadmap
 

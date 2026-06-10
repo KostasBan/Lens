@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0 - Public Portfolio Polish
+
+- Added public-facing design goals to the README.
+- Added an optional manual Unity test workflow for GitHub Actions.
+- Documented GameCI license setup for package test validation.
+- Prepared the package for a tagged GitHub release.
+
 ## 0.7.0 - QA Evidence Bundle
 
 - Added JSON debug report export.

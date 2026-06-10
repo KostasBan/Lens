@@ -3,6 +3,6 @@ namespace KostasBan.Lens
     public static class LensPackageInfo
     {
         public const string PackageName = "com.kostasban.lens";
-        public const string Version = "0.7.0";
+        public const string Version = "0.8.0";
     }
 }

@@ -16,6 +16,21 @@ Recommended local flow:
 
 The package should also import in projects using either legacy Input Manager, Input System, or both.
 
+## GitHub Validation
+
+The repository has two validation workflows:
+
+- `Package Validation` runs on pushes and pull requests. It checks package metadata, required files, version consistency, Unity meta files, and avoids legacy `UnityEngine.Input` polling.
+- `Unity EditMode Tests` is a manual workflow powered by GameCI. It is optional until Unity license secrets are configured for the repository.
+
+To enable the manual Unity workflow, configure the GitHub repository secrets expected by GameCI:
+
+- `UNITY_LICENSE`
+- `UNITY_EMAIL`
+- `UNITY_PASSWORD`
+
+The workflow copies the root-level package into a temporary `test-package/` directory before running GameCI package mode. This avoids the known limitation where root-level Unity packages are problematic for package-mode CI.
+
 ## Package Rules
 
 - Runtime source belongs in `Runtime/`.
@@ -33,7 +48,7 @@ Use package versions to communicate intent:
 - Minor: additive public API or sample improvements.
 - Major: breaking public API changes.
 
-Tag releases with the package version, for example `v0.7.0`.
+Tag releases with the package version, for example `v0.8.0`.
 
 ## Safety
 
