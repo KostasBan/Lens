@@ -32,6 +32,8 @@ Prefer adding an `ILensSectionProvider` owned by the system that owns the data. 
 LensSectionRegistry.Register(new MySystemLensSection(mySystem));
 ```
 
+For scene-owned providers, prefer deriving from `LensSectionBehaviour` so registration follows `OnEnable` and `OnDisable`.
+
 Use callback entries for important mutable values:
 
 ```csharp
@@ -43,6 +45,7 @@ yield return LensEntry.Button("Unlock Debug Content", system.UnlockDebugContent,
 
 Lens should render and invoke callbacks; the consuming system should own state, validation, permissions, and side effects.
 Keep `GetEntries()` cheap. Cache expensive data in the owning system and expose snapshots through Lens instead of scanning scenes, doing file/network IO, or calling slow services from a provider.
+For frequently refreshed mutable entries, cache `LensEntry` instances/delegates in the provider constructor and yield the cached entries. Lens is main-thread-only.
 Use redaction for values that help QA but should not appear raw in the overlay or reports. Use confirmation for progression, inventory, account, save, tutorial, or content-unlock actions.
 Use `LensOption<T>` labels for option entries, and use `LensEntry.Custom` plus `LensEntryDrawerRegistry` for project-owned controls that do not belong in Lens core.
 Use `LensEntryDrawContext.IsCompact` and logical screen metrics when writing custom drawers so they remain usable on mobile portrait screens.
@@ -66,6 +69,7 @@ Use `LensEntryDrawContext.IsCompact` and logical screen metrics when writing cus
 - README examples still match the public API.
 - Reports never execute action entries.
 - Text and JSON reports preserve redaction rules.
+- Text and JSON reports include schema version and device/app/build metadata.
 - Reports and search do not expose raw sensitive values.
-- Screenshot capture remains local-only.
+- Screenshot and report exports remain local unless explicitly shared by the user.
 - Custom drawer registrations are explicit and easy to audit.

@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.0 - Stabilization And QA Retrieval
+
+- Added domain-reload-off runtime reset for static Lens state.
+- Added `LensSectionBehaviour` for scene-owned provider registration.
+- Added report schema versioning, device/app/build metadata, report file export, and native share support.
+- Added descriptive wrong-kind guards for `LensEntry` accessors.
+- Added provider lifecycle, report export, and API hardening tests.
+- Documented provider allocation guidance and main-thread-only usage.
+
+### Behavior Changes
+
+- Wrong-kind `LensEntry` access now throws descriptive `InvalidOperationException` errors.
+- `LensSectionRegistry.Unregister(null)` now throws `ArgumentNullException`, matching `Register(null)`.
+- Static registry, drawer registry, runtime policy, and report metadata state now resets on subsystem registration.
+
 ## 0.10.0 - Runtime Performance Pass
 
 - Added refresh interval control and explicit refresh support on `LensRuntimeConsole`.

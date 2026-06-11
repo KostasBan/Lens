@@ -21,7 +21,7 @@ The package should also import in projects using either legacy Input Manager, In
 The repository has two validation workflows:
 
 - `Package Validation` runs on pushes and pull requests. It checks package metadata, required files, version consistency, Unity meta files, and avoids legacy `UnityEngine.Input` polling.
-- `Unity EditMode Tests` is a manual workflow powered by GameCI. It is optional until Unity license secrets are configured for the repository.
+- `Unity EditMode Tests` runs on pushes, pull requests, and manual dispatch when Unity license secrets are configured for the repository.
 
 To enable the manual Unity workflow, configure the GitHub repository secrets expected by GameCI:
 
@@ -39,6 +39,7 @@ The workflow copies the root-level package into a temporary `test-package/` dire
 - Keep public APIs small and backward-compatible when practical.
 - Do not add runtime dependencies without documenting why.
 - Do not make Lens depend on game-specific systems such as remote config, analytics, or debug console packages.
+- Keep Lens main-thread-only; do not add locks unless a future plan changes the threading model.
 
 ## Issues And Safety
 
@@ -54,7 +55,7 @@ Use package versions to communicate intent:
 - Minor: additive public API or sample improvements.
 - Major: breaking public API changes.
 
-Tag releases with the package version, for example `v0.10.0`.
+Tag releases with the package version, for example `v1.0.0`.
 
 ## Safety
 

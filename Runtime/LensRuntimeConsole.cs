@@ -20,6 +20,7 @@ namespace KostasBan.Lens
         private readonly LensEntryDrawer entryDrawer = new LensEntryDrawer();
         private readonly LensGuiStyles styles = new LensGuiStyles();
         private readonly LensSectionCache sectionCache = new LensSectionCache();
+        private readonly LensConsoleChrome chrome = new LensConsoleChrome();
 
         internal bool IsOpen => state.IsOpen;
 
@@ -140,8 +141,8 @@ namespace KostasBan.Lens
             GUILayout.BeginArea(rect, GUIContent.none, styles.Panel);
             GUILayout.BeginVertical();
 
-            DrawHeader(metrics);
-            DrawSearch(metrics);
+            chrome.DrawHeader(state, styles, metrics);
+            chrome.DrawSearch(state, styles, metrics, RefreshNow);
 
             state.ScrollPosition = GUILayout.BeginScrollView(state.ScrollPosition, GUILayout.ExpandHeight(true));
 
@@ -151,56 +152,10 @@ namespace KostasBan.Lens
             }
 
             GUILayout.EndScrollView();
-            DrawFooter(metrics);
+            chrome.DrawFooter(state, styles, metrics, toggleKey, CopyTextReport, CopyJsonReport, CaptureScreenshot, ShareReport);
 
             GUILayout.EndVertical();
             GUILayout.EndArea();
-        }
-
-        private void DrawHeader(LensLayoutMetrics metrics)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Lens", styles.Title);
-            GUILayout.FlexibleSpace();
-
-            if (GUILayout.Button("Close", GUILayout.Width(metrics.SmallButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
-            {
-                state.Close();
-            }
-
-            GUILayout.EndHorizontal();
-            GUILayout.Space(8f);
-        }
-
-        private void DrawSearch(LensLayoutMetrics metrics)
-        {
-            if (metrics.IsCompact)
-            {
-                GUILayout.Label("Search", styles.Key);
-                GUILayout.BeginHorizontal();
-            }
-            else
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Search", styles.Key, GUILayout.Width(metrics.SearchLabelWidth));
-            }
-
-            var nextSearch = GUILayout.TextField(state.SearchText, styles.SearchField, GUILayout.MinHeight(metrics.ControlHeight));
-
-            if (!string.Equals(nextSearch, state.SearchText, StringComparison.Ordinal))
-            {
-                state.SearchText = nextSearch ?? string.Empty;
-                RefreshNow();
-            }
-
-            if (!string.IsNullOrEmpty(state.SearchText) && GUILayout.Button("Clear", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
-            {
-                state.SearchText = string.Empty;
-                RefreshNow();
-            }
-
-            GUILayout.EndHorizontal();
-            GUILayout.Space(8f);
         }
 
         private void DrawProvider(LensCachedSection section, LensLayoutMetrics metrics)
@@ -233,60 +188,6 @@ namespace KostasBan.Lens
             GUILayout.Space(10f);
         }
 
-        private void DrawFooter(LensLayoutMetrics metrics)
-        {
-            GUILayout.Space(6f);
-
-            if (metrics.IsCompact)
-            {
-                DrawCompactReportButtons(metrics);
-
-                GUILayout.BeginHorizontal();
-                if (state.HasStatus)
-                {
-                    GUILayout.Label(state.StatusMessage, state.StatusIsError ? styles.ErrorStatus : styles.Status);
-                }
-
-                GUILayout.FlexibleSpace();
-                GUILayout.Label($"Toggle: {toggleKey}", styles.Status);
-                GUILayout.EndHorizontal();
-                return;
-            }
-
-            GUILayout.BeginHorizontal();
-
-            DrawReportButton("Copy Text", CopyTextReport, metrics.PrimaryButtonWidth, metrics);
-            DrawReportButton("Copy JSON", CopyJsonReport, metrics.PrimaryButtonWidth, metrics);
-            DrawReportButton("Screenshot", CaptureScreenshot, metrics.PrimaryButtonWidth, metrics);
-
-            if (state.HasStatus)
-            {
-                GUILayout.Label(state.StatusMessage, state.StatusIsError ? styles.ErrorStatus : styles.Status);
-            }
-
-            GUILayout.FlexibleSpace();
-            GUILayout.Label($"Toggle: {toggleKey}", styles.Status);
-            GUILayout.EndHorizontal();
-        }
-
-        private void DrawCompactReportButtons(LensLayoutMetrics metrics)
-        {
-            GUILayout.BeginHorizontal();
-            DrawReportButton("Copy Text", CopyTextReport, metrics.PrimaryButtonWidth, metrics);
-            DrawReportButton("Copy JSON", CopyJsonReport, metrics.PrimaryButtonWidth, metrics);
-            GUILayout.EndHorizontal();
-
-            DrawReportButton("Capture Screenshot", CaptureScreenshot, metrics.PrimaryButtonWidth * 2f, metrics);
-        }
-
-        private void DrawReportButton(string label, Action action, float width, LensLayoutMetrics metrics)
-        {
-            if (GUILayout.Button(label, GUILayout.Width(width), GUILayout.MinHeight(metrics.ControlHeight)))
-            {
-                action();
-            }
-        }
-
         private void CopyTextReport()
         {
             ForceRefreshAllSections();
@@ -307,6 +208,14 @@ namespace KostasBan.Lens
             var screenshot = LensReportCapture.CaptureScreenshot();
             GUIUtility.systemCopyBuffer = screenshot.Path;
             state.SetStatus($"Screenshot path copied: {screenshot.Path}");
+        }
+
+        private void ShareReport()
+        {
+            ForceRefreshAllSections();
+            var artifact = LensReportExporter.Export(LensSectionRegistry.Providers, true);
+            var shared = LensNativeShare.ShareReport(artifact);
+            state.SetStatus(shared ? "Report shared." : $"Share fallback copied paths: {artifact.TextPath}");
         }
 
         private void ForceRefreshAllSections()

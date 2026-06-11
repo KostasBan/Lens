@@ -270,107 +270,128 @@ namespace KostasBan.Lens
 
         public bool GetBoolValue()
         {
-            return boolGetter != null && boolGetter();
+            EnsureKind(LensEntryKind.Toggle);
+            return boolGetter();
         }
 
         public void SetBoolValue(bool value)
         {
-            boolSetter?.Invoke(value);
+            EnsureKind(LensEntryKind.Toggle);
+            boolSetter(value);
         }
 
         public string GetTextValue()
         {
-            return textGetter != null ? textGetter() ?? string.Empty : string.Empty;
+            EnsureKind(LensEntryKind.Text);
+            return textGetter() ?? string.Empty;
         }
 
         public void SetTextValue(string value)
         {
-            textSetter?.Invoke(value ?? string.Empty);
+            EnsureKind(LensEntryKind.Text);
+            textSetter(value ?? string.Empty);
         }
 
         public float GetNumberValue()
         {
-            return numberGetter != null ? numberGetter() : 0f;
+            EnsureKind(LensEntryKind.Number);
+            return numberGetter();
         }
 
         public void SetNumberValue(float value)
         {
-            numberSetter?.Invoke(value);
+            EnsureKind(LensEntryKind.Number);
+            numberSetter(value);
         }
 
         public void ExecuteAction()
         {
-            action?.Invoke();
+            EnsureKind(LensEntryKind.Button);
+            action();
         }
 
         public float GetSliderValue()
         {
-            return sliderData != null ? sliderData.GetValue() : 0f;
+            EnsureKind(LensEntryKind.Slider);
+            return sliderData.GetValue();
         }
 
         public float GetSliderMin()
         {
-            return sliderData != null ? sliderData.Min : 0f;
+            EnsureKind(LensEntryKind.Slider);
+            return sliderData.Min;
         }
 
         public float GetSliderMax()
         {
-            return sliderData != null ? sliderData.Max : 1f;
+            EnsureKind(LensEntryKind.Slider);
+            return sliderData.Max;
         }
 
         public void SetSliderValue(float value)
         {
-            sliderData?.SetValue(value);
+            EnsureKind(LensEntryKind.Slider);
+            sliderData.SetValue(value);
         }
 
         public float ClampSliderValue(float value)
         {
-            return sliderData != null ? sliderData.ClampAndSnap(value) : value;
+            EnsureKind(LensEntryKind.Slider);
+            return sliderData.ClampAndSnap(value);
         }
 
         public string FormatSliderValue(float value)
         {
-            return sliderData != null ? sliderData.Format(value) : FormatNumber(value);
+            EnsureKind(LensEntryKind.Slider);
+            return sliderData.Format(value);
         }
 
         public int GetOptionCount()
         {
-            return selectData != null ? selectData.Count : 0;
+            EnsureSelectKind();
+            return selectData.Count;
         }
 
         public string GetOptionLabel(int index)
         {
+            EnsureSelectKind();
             return selectData.GetLabel(index);
         }
 
         public bool IsOptionSelected(int index)
         {
-            return selectData != null && selectData.IsSelected(index);
+            EnsureSelectKind();
+            return selectData.IsSelected(index);
         }
 
         public bool[] GetSelectedOptionDraft()
         {
-            return selectData != null ? selectData.GetSelectedDraft() : new bool[0];
+            EnsureSelectKind();
+            return selectData.GetSelectedDraft();
         }
 
         public void SetSingleOption(int index)
         {
+            EnsureKind(LensEntryKind.SingleSelect);
             selectData.SetSingle(index);
         }
 
         public void SetMultiOptions(bool[] selected)
         {
+            EnsureKind(LensEntryKind.MultiSelect);
             selectData.SetMulti(selected);
         }
 
         public float GetProgressCurrent()
         {
-            return progressData != null ? progressData.GetCurrent() : 0f;
+            EnsureKind(LensEntryKind.Progress);
+            return progressData.GetCurrent();
         }
 
         public float GetProgressMax()
         {
-            return progressData != null ? progressData.GetMax() : 0f;
+            EnsureKind(LensEntryKind.Progress);
+            return progressData.GetMax();
         }
 
         public float GetProgressRatio()
@@ -381,7 +402,24 @@ namespace KostasBan.Lens
 
         public string GetProgressLabel()
         {
-            return progressData != null ? progressData.Label : string.Empty;
+            EnsureKind(LensEntryKind.Progress);
+            return progressData.Label;
+        }
+
+        private void EnsureKind(LensEntryKind expected)
+        {
+            if (Kind != expected)
+            {
+                throw new InvalidOperationException($"Lens entry '{Key}' is {Kind} and cannot be used as {expected}.");
+            }
+        }
+
+        private void EnsureSelectKind()
+        {
+            if (Kind != LensEntryKind.SingleSelect && Kind != LensEntryKind.MultiSelect)
+            {
+                throw new InvalidOperationException($"Lens entry '{Key}' is {Kind} and cannot be used as an option entry.");
+            }
         }
 
         private string GetReportValue()

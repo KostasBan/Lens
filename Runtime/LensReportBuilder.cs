@@ -7,6 +7,8 @@ namespace KostasBan.Lens
 {
     public static class LensReportBuilder
     {
+        public const int SchemaVersion = 1;
+
         public static string BuildReport(IEnumerable<ILensSectionProvider> providers)
         {
             return BuildTextReport(providers);
@@ -62,10 +64,13 @@ namespace KostasBan.Lens
             var builder = new StringBuilder();
 
             builder.AppendLine("Lens Debug Report");
+            builder.Append("Report Schema: ");
+            builder.AppendLine(report.schemaVersion.ToString());
             builder.Append("Generated: ");
             builder.AppendLine(report.generatedUtc);
             builder.Append("Lens Version: ");
             builder.AppendLine(report.lensVersion);
+            AppendMetadata(builder, report.metadata);
 
             if (!string.IsNullOrWhiteSpace(report.screenshotPath))
             {
@@ -97,9 +102,11 @@ namespace KostasBan.Lens
         {
             var report = new LensReportData
             {
+                schemaVersion = SchemaVersion,
                 generatedUtc = DateTime.UtcNow.ToString("O"),
                 lensVersion = LensPackageInfo.Version,
-                screenshotPath = screenshot.HasPath ? screenshot.Path : string.Empty
+                screenshotPath = screenshot.HasPath ? screenshot.Path : string.Empty,
+                metadata = LensReportMetadata.Capture()
             };
 
             if (providers == null)
@@ -161,12 +168,43 @@ namespace KostasBan.Lens
             }
         }
 
+        private static void AppendMetadata(StringBuilder builder, LensReportMetadataData metadata)
+        {
+            if (metadata == null)
+            {
+                return;
+            }
+
+            builder.Append("Unity Version: ");
+            builder.AppendLine(metadata.unityVersion);
+            builder.Append("App Version: ");
+            builder.AppendLine(metadata.appVersion);
+            builder.Append("Platform: ");
+            builder.AppendLine(metadata.platform);
+            builder.Append("Device Model: ");
+            builder.AppendLine(metadata.deviceModel);
+            builder.Append("Operating System: ");
+            builder.AppendLine(metadata.operatingSystem);
+            builder.Append("Device Type: ");
+            builder.AppendLine(metadata.deviceType);
+            builder.Append("Build GUID: ");
+            builder.AppendLine(metadata.buildGuid);
+
+            if (!string.IsNullOrWhiteSpace(metadata.projectBuildNumber))
+            {
+                builder.Append("Project Build Number: ");
+                builder.AppendLine(metadata.projectBuildNumber);
+            }
+        }
+
         [Serializable]
         private sealed class LensReportData
         {
+            public int schemaVersion;
             public string generatedUtc;
             public string lensVersion;
             public string screenshotPath;
+            public LensReportMetadataData metadata;
             public List<LensReportSectionData> sections = new List<LensReportSectionData>();
         }
 

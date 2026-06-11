@@ -10,6 +10,7 @@ Lens is not intended to be exposed as an unmanaged production-user feature.
 - Mark useful but sensitive values as redacted.
 - Require confirmation for risky debug actions.
 - Keep project-owned permissions, validation, and side effects inside the consuming project.
+- Treat exported reports and screenshots as local QA artifacts unless the user explicitly shares them.
 
 ## Do Not Expose
 
@@ -21,6 +22,10 @@ Lens is not intended to be exposed as an unmanaged production-user feature.
 ## Redaction
 
 Lens redaction is a safety aid for overlays, search, and copied reports. It is not a security boundary. The safest value is one that is never exposed to Lens in the first place.
+
+## Report Artifacts
+
+Lens can export text, JSON, and screenshot artifacts under `Application.persistentDataPath/LensReports` and can invoke native sharing on supported mobile platforms. Review provider contents before sharing reports outside an internal QA or development channel.
 
 ## Reporting Issues
 

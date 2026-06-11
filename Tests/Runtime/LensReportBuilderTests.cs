@@ -1,10 +1,18 @@
 using System;
+using System.IO;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace KostasBan.Lens.Tests
 {
     public sealed class LensReportBuilderTests
     {
+        [TearDown]
+        public void TearDown()
+        {
+            LensReportMetadata.Reset();
+        }
+
         [Test]
         public void BuildReportIncludesProviderEntries()
         {
@@ -14,7 +22,10 @@ namespace KostasBan.Lens.Tests
             });
 
             StringAssert.Contains("Lens Debug Report", report);
-            StringAssert.Contains("Lens Version: 0.10.0", report);
+            StringAssert.Contains("Report Schema: 1", report);
+            StringAssert.Contains("Lens Version: 1.0.0", report);
+            StringAssert.Contains("Unity Version:", report);
+            StringAssert.Contains("App Version:", report);
             StringAssert.Contains("[Build]", report);
             StringAssert.Contains("Version: 1.2.3", report);
         }
@@ -87,12 +98,16 @@ namespace KostasBan.Lens.Tests
         [Test]
         public void BuildJsonReportIncludesProviderEntries()
         {
+            LensReportMetadata.ProjectBuildNumber = "build-42";
             var report = LensReportBuilder.BuildJsonReport(new[]
             {
                 new StaticProvider("Build", new LensEntry("Version", "1.2.3"))
             });
 
-            StringAssert.Contains("\"lensVersion\": \"0.10.0\"", report);
+            StringAssert.Contains("\"schemaVersion\": 1", report);
+            StringAssert.Contains("\"lensVersion\": \"1.0.0\"", report);
+            StringAssert.Contains("\"metadata\":", report);
+            StringAssert.Contains("\"projectBuildNumber\": \"build-42\"", report);
             StringAssert.Contains("\"title\": \"Build\"", report);
             StringAssert.Contains("\"key\": \"Version\"", report);
             StringAssert.Contains("\"kind\": \"ReadOnly\"", report);
@@ -154,6 +169,45 @@ namespace KostasBan.Lens.Tests
 
             StringAssert.Contains("Screenshot: C:/Temp/lens-report.png", textReport);
             StringAssert.Contains("\"screenshotPath\": \"C:/Temp/lens-report.png\"", jsonReport);
+        }
+
+        [Test]
+        public void ExportWritesTextAndJsonReports()
+        {
+            var artifact = LensReportExporter.Export(new[]
+            {
+                new StaticProvider("Build", new LensEntry("Version", "1.2.3"))
+            }, false, "lens-test");
+
+            try
+            {
+                Assert.IsTrue(File.Exists(artifact.TextPath));
+                Assert.IsTrue(File.Exists(artifact.JsonPath));
+                Assert.IsFalse(artifact.HasScreenshotPath);
+                StringAssert.Contains("Version: 1.2.3", File.ReadAllText(artifact.TextPath));
+                StringAssert.Contains("\"value\": \"1.2.3\"", File.ReadAllText(artifact.JsonPath));
+            }
+            finally
+            {
+                if (File.Exists(artifact.TextPath))
+                {
+                    File.Delete(artifact.TextPath);
+                }
+
+                if (File.Exists(artifact.JsonPath))
+                {
+                    File.Delete(artifact.JsonPath);
+                }
+            }
+        }
+
+        [Test]
+        public void NativeShareFallsBackToClipboardInEditor()
+        {
+            var shared = LensNativeShare.ShareText("Lens", "Fallback report");
+
+            Assert.IsFalse(shared);
+            Assert.AreEqual("Fallback report", GUIUtility.systemCopyBuffer);
         }
 
         [Test]

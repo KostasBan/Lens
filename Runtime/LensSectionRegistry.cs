@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace KostasBan.Lens
 {
@@ -26,7 +27,7 @@ namespace KostasBan.Lens
         {
             if (provider == null)
             {
-                return;
+                throw new ArgumentNullException(nameof(provider));
             }
 
             RegisteredProviders.Remove(provider);
@@ -35,6 +36,18 @@ namespace KostasBan.Lens
         public static void Clear()
         {
             RegisteredProviders.Clear();
+        }
+    }
+
+    internal static class LensRuntimeState
+    {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetForPlayMode()
+        {
+            LensSectionRegistry.Clear();
+            LensEntryDrawerRegistry.Clear();
+            LensRuntimePolicy.ResetToDefault();
+            LensReportMetadata.Reset();
         }
     }
 }

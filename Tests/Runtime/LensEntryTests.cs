@@ -205,5 +205,62 @@ namespace KostasBan.Lens.Tests
             Assert.Throws<ArgumentNullException>(() => LensEntry.Progress("Progress", null, () => 1f));
             Assert.Throws<ArgumentException>(() => LensEntry.Custom("Custom", string.Empty, null, _ => string.Empty));
         }
+
+        [Test]
+        public void WrongKindAccessThrowsDescriptiveExceptions()
+        {
+            var entry = new LensEntry("Coins", "120");
+
+            AssertWrongKind(() => entry.GetBoolValue(), "Toggle");
+            AssertWrongKind(() => entry.SetBoolValue(true), "Toggle");
+            AssertWrongKind(() => entry.GetTextValue(), "Text");
+            AssertWrongKind(() => entry.SetTextValue("Value"), "Text");
+            AssertWrongKind(() => entry.GetNumberValue(), "Number");
+            AssertWrongKind(() => entry.SetNumberValue(1f), "Number");
+            AssertWrongKind(() => entry.ExecuteAction(), "Button");
+            AssertWrongKind(() => entry.GetSliderValue(), "Slider");
+            AssertWrongKind(() => entry.GetSliderMin(), "Slider");
+            AssertWrongKind(() => entry.GetSliderMax(), "Slider");
+            AssertWrongKind(() => entry.SetSliderValue(1f), "Slider");
+            AssertWrongKind(() => entry.ClampSliderValue(1f), "Slider");
+            AssertWrongKind(() => entry.FormatSliderValue(1f), "Slider");
+            AssertWrongKind(() => entry.GetOptionCount(), "option entry");
+            AssertWrongKind(() => entry.GetOptionLabel(0), "option entry");
+            AssertWrongKind(() => entry.IsOptionSelected(0), "option entry");
+            AssertWrongKind(() => entry.GetSelectedOptionDraft(), "option entry");
+            AssertWrongKind(() => entry.SetSingleOption(0), "SingleSelect");
+            AssertWrongKind(() => entry.SetMultiOptions(Array.Empty<bool>()), "MultiSelect");
+            AssertWrongKind(() => entry.GetProgressCurrent(), "Progress");
+            AssertWrongKind(() => entry.GetProgressMax(), "Progress");
+            AssertWrongKind(() => entry.GetProgressRatio(), "Progress");
+            AssertWrongKind(() => entry.GetProgressLabel(), "Progress");
+        }
+
+        [Test]
+        public void SelectEntriesRejectWrongMutationKind()
+        {
+            var singleValue = "dev";
+            var multiValues = new System.Collections.Generic.List<string>();
+            var options = new[]
+            {
+                new LensOption<string>("dev", "Development")
+            };
+
+            var single = LensEntry.SingleSelect("Environment", () => singleValue, next => singleValue = next, options);
+            var multi = LensEntry.MultiSelect("Rewards", () => multiValues, next =>
+            {
+                multiValues.Clear();
+                multiValues.AddRange(next);
+            }, options);
+
+            AssertWrongKind(() => single.SetMultiOptions(new[] { true }), "MultiSelect");
+            AssertWrongKind(() => multi.SetSingleOption(0), "SingleSelect");
+        }
+
+        private static void AssertWrongKind(TestDelegate action, string expectedMessage)
+        {
+            var exception = Assert.Throws<InvalidOperationException>(action);
+            StringAssert.Contains(expectedMessage, exception.Message);
+        }
     }
 }

@@ -63,7 +63,7 @@ Install the package, add a provider, register it during bootstrap, then open Len
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay that can be used in Editor, development builds, staging, QA, and controlled internal builds.
 
-V0.10 is deliberately small, extensible, responsive, and easier to attach to QA reports:
+V1.0 is deliberately small, extensible, responsive, and easier to attach to QA reports:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -83,6 +83,8 @@ V0.10 is deliberately small, extensible, responsive, and easier to attach to QA 
 - Copy-to-clipboard text debug report
 - Copy-to-clipboard JSON debug report
 - Local screenshot capture for QA evidence
+- Native share support for mobile QA retrieval
+- Report schema versioning and device/build metadata
 - Cached provider refresh to reduce runtime polling
 - Basic sample scene
 - Provider cookbook samples
@@ -198,6 +200,20 @@ Unregister it when the owner is destroyed:
 LensSectionRegistry.Unregister(provider);
 ```
 
+For scene-owned providers, prefer deriving from `LensSectionBehaviour`. It registers in `OnEnable` and unregisters in `OnDisable`, which avoids stale providers when scenes unload or Enter Play Mode runs with domain reload disabled.
+
+```csharp
+public sealed class MySceneLensSection : LensSectionBehaviour
+{
+    public override string SectionTitle => "Scene";
+
+    public override IEnumerable<LensEntry> GetEntries()
+    {
+        yield return new LensEntry("Wave", "3");
+    }
+}
+```
+
 ## Interactive Entries
 
 Providers own all mutations through callbacks. Lens renders controls and invokes callbacks, but it does not store authoritative game state.
@@ -308,6 +324,30 @@ Set `RefreshIntervalSeconds` to `0` if a project needs every visible IMGUI pass 
 
 Providers should still keep `GetEntries()` cheap. Avoid slow service calls, large allocations, file IO, network requests, or expensive scene scans inside `GetEntries()`. Expensive systems should cache their own snapshots and expose those snapshots through Lens providers.
 
+For providers that refresh often, cache mutable entries and delegates in the provider constructor, then yield the cached entries:
+
+```csharp
+public sealed class FlagsLensSection : ILensSectionProvider
+{
+    private bool godMode;
+    private readonly LensEntry godModeEntry;
+
+    public FlagsLensSection()
+    {
+        godModeEntry = LensEntry.Toggle("God Mode", () => godMode, value => godMode = value);
+    }
+
+    public string SectionTitle => "Flags";
+
+    public IEnumerable<LensEntry> GetEntries()
+    {
+        yield return godModeEntry;
+    }
+}
+```
+
+Lens is intended to be used from Unity's main thread. Providers should expose frame-synchronized snapshots rather than doing work from background threads.
+
 ## Internal Build Policy
 
 Lens is enabled by default only for Editor, Development Build, or builds compiled with `LENS_ENABLED`:
@@ -345,8 +385,16 @@ Lens builds readable plain text and JSON reports from the currently registered p
 
 ```text
 Lens Debug Report
+Report Schema: 1
 Generated: 2026-06-09T12:30:00.0000000Z
-Lens Version: 0.10.0
+Lens Version: 1.0.0
+Unity Version: 6000.3.16f1
+App Version: 0.1.0
+Platform: WindowsEditor
+Device Model: Editor
+Operating System: Windows
+Device Type: Desktop
+Build GUID:
 
 [Build Info]
 App Version: 0.1.0
@@ -366,14 +414,26 @@ The console footer provides:
 - `Copy Text` for a human-readable report.
 - `Copy JSON` for structured QA or automation handoff.
 - `Capture Screenshot` for a local PNG saved under `Application.persistentDataPath/LensReports`; the screenshot path is copied to the clipboard.
+- `Share` for exporting text/JSON/screenshot artifacts and invoking native share on supported mobile platforms.
 
 JSON reports use this shape:
 
 ```json
 {
+  "schemaVersion": 1,
   "generatedUtc": "2026-06-09T12:30:00.0000000Z",
-  "lensVersion": "0.10.0",
+  "lensVersion": "1.0.0",
   "screenshotPath": "",
+  "metadata": {
+    "unityVersion": "6000.3.16f1",
+    "appVersion": "0.1.0",
+    "platform": "WindowsEditor",
+    "deviceModel": "Editor",
+    "operatingSystem": "Windows",
+    "deviceType": "Desktop",
+    "buildGuid": "",
+    "projectBuildNumber": ""
+  },
   "sections": [
     {
       "title": "Build Info",
@@ -395,8 +455,11 @@ JSON reports use this shape:
 Code can also request a specific report format:
 
 ```csharp
+LensReportMetadata.ProjectBuildNumber = "qa-2048";
+
 var text = LensReportBuilder.BuildReport(LensSectionRegistry.Providers, LensReportFormat.Text);
 var json = LensReportBuilder.BuildReport(LensSectionRegistry.Providers, LensReportFormat.Json);
+var artifact = LensReportExporter.Export(LensSectionRegistry.Providers);
 ```
 
 ## Production Notes
@@ -421,23 +484,43 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V0.10.
+These integrations are intentionally out of scope for V1.0.
 
 ## Roadmap
 
 Near-term:
 
 - Screenshots and visual README assets
-- Secure activation gesture
-- Console log capture
+- Domain-reload-off safety for Unity 6 projects:
+  - reset `LensSectionRegistry` on subsystem registration,
+  - document a `LensSectionBehaviour` register/unregister lifecycle pattern,
+  - investigate provider leak detection for destroyed scene-owned providers.
+- Mobile-ready report retrieval:
+  - make text/JSON reports and screenshots easier to retrieve from mobile devices,
+  - include device model, OS, app version, build number, and timestamp in reports.
+- LensEntry API tightening before 1.0:
+  - reduce kind-specific public surface where practical,
+  - make invalid kind/value access fail with clear errors,
+  - keep custom entry drawers as the extension point for project-specific controls.
+- Provider allocation guidance:
+  - document cached entry/delegate patterns for providers that refresh often,
+  - avoid per-refresh closure allocations in high-frequency debug sections.
+- Pre-1.0 API hygiene:
+  - mark non-public API as `internal`,
+  - make registry null argument behavior consistent,
+  - document Lens as main-thread-only rather than adding unnecessary locks.
 
 Later:
 
+- Configurable mobile activation gestures, such as a multi-finger long press.
+- JSON report schema versioning for downstream tooling and AI-assisted bug triage.
+- Unity CI matrix across supported Unity versions.
+- Console log capture.
 - Local flag overrides
 - Production-safe redaction rules
 - Bug report form or backend handoff
 - Optional adapters for project DI patterns such as Zenject
-- Optional richer UI path if IMGUI becomes limiting
+- Optional richer UI path if IMGUI becomes limiting, while keeping provider APIs UI-agnostic.
 
 ## For Agents And Contributors
 

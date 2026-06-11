@@ -59,6 +59,8 @@ LensSectionRegistry.Register(new EconomyLensSection(economy));
 
 Unregister the same provider when its owner is disposed or destroyed.
 
+For scene-owned providers, prefer `LensSectionBehaviour`; it registers in `OnEnable` and unregisters in `OnDisable`, which prevents stale scene references when scenes unload or domain reload is disabled.
+
 ## Safe Mutable Entries
 
 Use mutable entries only when changing the value is useful for testing and the owning system can safely apply the change.
@@ -76,6 +78,8 @@ Do not expose destructive actions with vague names. Prefer labels like `Reset Lo
 Mark useful sensitive values as redacted with the `isSensitive` overload. Use confirmation for actions that mutate progression, inventory, account state, save data, tutorial state, or content unlocks.
 When writing custom drawers, read `LensEntryDrawContext.IsCompact` and logical screen dimensions so controls stay usable in mobile portrait layouts.
 Keep provider `GetEntries()` methods cheap. Do not call slow services, allocate large collections, scan scenes, or perform network/file IO from a Lens provider. Cache expensive system data elsewhere and expose the latest snapshot through entries.
+For frequently refreshed mutable entries, cache the `LensEntry` instances and delegates in the provider constructor and yield those cached entries from `GetEntries()`.
+Lens is main-thread-only; do not design providers that depend on background-thread calls.
 
 ## Third-Party Debug Panels
 
@@ -89,6 +93,6 @@ yield return LensEntry.Button("Open Debug Console", debugConsole.Show);
 
 Lens text and JSON reports read current values from callbacks. Action buttons are listed as available actions and are not executed while generating reports. Sensitive entries are emitted as `[redacted]`, and search does not match their raw values.
 
-Use `Capture Screenshot` when QA needs visual evidence alongside the provider report. Screenshots are local artifacts saved under `Application.persistentDataPath/LensReports`; Lens does not upload or submit them.
+Use `Capture Screenshot` when QA needs visual evidence alongside the provider report. Screenshots and exported report files are local artifacts saved under `Application.persistentDataPath/LensReports`; Lens does not upload or submit them. Use `Share` on supported mobile platforms when QA needs to send report paths through the native share sheet.
 
 Lens intentionally fails fast. Do not hide provider, report, action, or custom drawer exceptions unless the consuming project has a very specific reason to do so.

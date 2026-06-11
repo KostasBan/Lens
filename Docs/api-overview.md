@@ -20,6 +20,8 @@ public sealed class EconomyLensSection : ILensSectionProvider
 
 Register and unregister the provider with `LensSectionRegistry` during the owner lifetime.
 
+For scene-owned providers, derive from `LensSectionBehaviour` so registration follows `OnEnable` and `OnDisable`. Lens resets static registry state on subsystem registration, which keeps Enter Play Mode with domain reload disabled from carrying providers across sessions.
+
 ## Entries
 
 Use `LensEntry` factory methods for common controls:
@@ -33,7 +35,9 @@ Use `LensEntry` factory methods for common controls:
 
 Providers own all state and callbacks. Lens renders controls, invokes callbacks, and reports current values.
 
-Keep `GetEntries()` cheap. Cache expensive data in the owning system and expose a snapshot through Lens instead of doing slow work during UI refresh.
+Keep `GetEntries()` cheap. Cache expensive data in the owning system and expose a snapshot through Lens instead of doing slow work during UI refresh. For frequently refreshed mutable entries, cache the `LensEntry` instances and delegates in the provider constructor instead of recreating closures every refresh.
+
+Lens is main-thread-only. Providers should be called from Unity's frame/update flow and should not perform background-thread work.
 
 ## Runtime Policy
 
@@ -68,6 +72,8 @@ var text = LensReportBuilder.BuildReport(LensSectionRegistry.Providers, LensRepo
 var json = LensReportBuilder.BuildReport(LensSectionRegistry.Providers, LensReportFormat.Json);
 ```
 
-Reports include Lens version, UTC timestamp, sections, entries, action labels, info text, and redacted values. Report generation never executes action entries.
+Reports include schema version, Lens version, UTC timestamp, Unity/app/device/build metadata, sections, entries, action labels, info text, and redacted values. Report generation never executes action entries.
 
 Use `LensReportCapture` to capture local screenshots under `Application.persistentDataPath/LensReports`.
+Use `LensReportExporter` to write text and JSON report artifacts, and `LensNativeShare` to invoke native mobile sharing where supported.
+Set `LensReportMetadata.ProjectBuildNumber` during project bootstrap when QA needs a project-specific build number in exported reports.

@@ -43,13 +43,20 @@ jobs:
             "Runtime/LensEntryDrawContext.cs",
             "Runtime/LensEntryDrawerRegistry.cs",
             "Runtime/LensLayoutMetrics.cs",
+            "Runtime/LensConsoleChrome.cs",
+            "Runtime/LensNativeShare.cs",
             "Runtime/LensPackageInfo.cs",
             "Runtime/LensOption.cs",
+            "Runtime/LensReportArtifact.cs",
             "Runtime/LensRuntimeDiagnostics.cs",
             "Runtime/LensRuntimePolicy.cs",
             "Runtime/LensRuntimeConsole.cs",
+            "Runtime/LensReportExporter.cs",
+            "Runtime/LensReportMetadata.cs",
+            "Runtime/LensSectionBehaviour.cs",
             "Runtime/LensSectionCache.cs",
             "Runtime/LensUiScaleMode.cs",
+            "Runtime/Plugins/iOS/LensNativeShare.mm",
             "Tests/Runtime/KostasBan.Lens.Tests.asmdef",
             "Samples~/Basic Lens Demo/Scripts/LensDemoBootstrap.cs",
             "README.md",
@@ -81,7 +88,7 @@ jobs:
           }
 
           $runtimeFiles = Get-ChildItem Runtime -Recurse -File | Where-Object {
-            $_.Extension -in ".cs", ".asmdef"
+            $_.Extension -in ".cs", ".asmdef", ".mm"
           }
 
           foreach ($file in $runtimeFiles) {
