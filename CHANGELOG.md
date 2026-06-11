@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0 - Runtime Performance Pass
+
+- Added refresh interval control and explicit refresh support on `LensRuntimeConsole`.
+- Added internal provider entry caching to reduce per-frame provider polling.
+- Avoided fetching collapsed section entries unless search or rendering requires them.
+- Reduced repeated value reads and draft lookups in entry drawing paths.
+- Documented provider performance expectations.
+
 ## 0.9.0 - Repository Trust And Samples
 
 - Added README badges, quick start guidance, and an architecture diagram.

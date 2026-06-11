@@ -8,7 +8,7 @@ namespace KostasBan.Lens
     {
         public void Draw(LensEntry entry, string sectionTitle, LensConsoleState state, LensGuiStyles styles, LensLayoutMetrics metrics)
         {
-            var entryId = BuildEntryId(sectionTitle, entry);
+            var entryId = state.GetEntryId(sectionTitle, entry);
 
             if (entry.IsSensitive)
             {
@@ -90,14 +90,16 @@ namespace KostasBan.Lens
             if (!string.Equals(next, draft, StringComparison.Ordinal))
             {
                 state.SetTextDraft(entryId, next);
+                draft = next;
             }
 
-            if (!string.Equals(state.GetTextDraft(entryId, current), current, StringComparison.Ordinal) && GUILayout.Button("Apply", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
+            var hasChanges = !string.Equals(draft, current, StringComparison.Ordinal);
+            if (hasChanges && GUILayout.Button("Apply", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
-                entry.SetTextValue(state.GetTextDraft(entryId, current));
+                entry.SetTextValue(draft);
             }
 
-            if (!string.Equals(state.GetTextDraft(entryId, current), current, StringComparison.Ordinal) && GUILayout.Button("Revert", GUILayout.Width(metrics.RevertButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
+            if (hasChanges && GUILayout.Button("Revert", GUILayout.Width(metrics.RevertButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 state.ResetTextDraft(entryId, current);
             }
@@ -110,16 +112,18 @@ namespace KostasBan.Lens
         {
             BeginEntry(entry, styles, metrics);
 
-            var draft = state.GetNumberDraft(entryId, entry.GetNumberValue());
+            var current = entry.GetNumberValue();
+            var draft = state.GetNumberDraft(entryId, current);
             var next = GUILayout.TextField(draft, GUILayout.Width(metrics.ValueFieldWidth), GUILayout.MinHeight(metrics.ControlHeight));
 
             if (!string.Equals(next, draft, StringComparison.Ordinal))
             {
                 state.SetNumberDraft(entryId, next);
+                draft = next;
             }
 
-            if (float.TryParse(state.GetNumberDraft(entryId, entry.GetNumberValue()), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
-                Math.Abs(parsed - entry.GetNumberValue()) > 0.0001f &&
+            if (float.TryParse(draft, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
+                Math.Abs(parsed - current) > 0.0001f &&
                 GUILayout.Button("Apply", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 entry.SetNumberValue(parsed);
@@ -127,7 +131,7 @@ namespace KostasBan.Lens
 
             if (GUILayout.Button("Revert", GUILayout.Width(metrics.RevertButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
-                state.SetNumberDraft(entryId, entry.GetNumberValue().ToString("0.###", CultureInfo.InvariantCulture));
+                state.SetNumberDraft(entryId, current.ToString("0.###", CultureInfo.InvariantCulture));
             }
 
             DrawInfoButton(entry, entryId, state, metrics);
@@ -198,13 +202,14 @@ namespace KostasBan.Lens
             if (Math.Abs(next - draft) > 0.0001f)
             {
                 state.SetSliderDraft(entryId, next);
+                draft = next;
             }
 
-            GUILayout.Label(entry.FormatSliderValue(state.GetSliderDraft(entryId, current)), styles.Value, GUILayout.Width(72f));
+            GUILayout.Label(entry.FormatSliderValue(draft), styles.Value, GUILayout.Width(72f));
 
-            if (Math.Abs(state.GetSliderDraft(entryId, current) - current) > 0.0001f && GUILayout.Button("Apply", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
+            if (Math.Abs(draft - current) > 0.0001f && GUILayout.Button("Apply", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
-                entry.SetSliderValue(state.GetSliderDraft(entryId, current));
+                entry.SetSliderValue(draft);
             }
 
             if (GUILayout.Button("Revert", GUILayout.Width(metrics.RevertButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
@@ -234,7 +239,8 @@ namespace KostasBan.Lens
             }
 
             GUILayout.BeginVertical();
-            for (var i = 0; i < entry.GetOptionCount(); i++)
+            var optionCount = entry.GetOptionCount();
+            for (var i = 0; i < optionCount; i++)
             {
                 var selected = entry.IsOptionSelected(i) ? "* " : string.Empty;
                 if (GUILayout.Button($"{selected}{entry.GetOptionLabel(i)}", GUILayout.Width(metrics.OptionPopupWidth), GUILayout.MinHeight(metrics.ControlHeight)))
@@ -254,7 +260,8 @@ namespace KostasBan.Lens
             if (GUILayout.Button(entry.DisplayValue, GUILayout.Width(metrics.IsCompact ? metrics.OptionPopupWidth : 180f), GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 state.TogglePopup(entryId);
-                state.ResetMultiSelectDraft(entryId, entry.GetSelectedOptionDraft());
+                var selected = entry.GetSelectedOptionDraft();
+                state.ResetMultiSelectDraft(entryId, selected);
             }
 
             DrawInfoButton(entry, entryId, state, metrics);
@@ -265,7 +272,8 @@ namespace KostasBan.Lens
                 return;
             }
 
-            var draft = state.GetMultiSelectDraft(entryId, entry.GetSelectedOptionDraft());
+            var currentSelection = entry.GetSelectedOptionDraft();
+            var draft = state.GetMultiSelectDraft(entryId, currentSelection);
 
             GUILayout.BeginVertical();
             if (GUILayout.Button("None", GUILayout.Width(metrics.OptionPopupWidth), GUILayout.MinHeight(metrics.ControlHeight)))
@@ -284,7 +292,8 @@ namespace KostasBan.Lens
                 }
             }
 
-            for (var i = 0; i < entry.GetOptionCount(); i++)
+            var optionCount = entry.GetOptionCount();
+            for (var i = 0; i < optionCount; i++)
             {
                 draft[i] = GUILayout.Toggle(draft[i], entry.GetOptionLabel(i), GUILayout.Width(metrics.OptionPopupWidth), GUILayout.MinHeight(metrics.ControlHeight));
             }
@@ -298,7 +307,7 @@ namespace KostasBan.Lens
 
             if (GUILayout.Button("Cancel", GUILayout.Width(metrics.SmallButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
-                state.ResetMultiSelectDraft(entryId, entry.GetSelectedOptionDraft());
+                state.ResetMultiSelectDraft(entryId, currentSelection);
                 state.ClosePopup(entryId);
             }
 
@@ -311,11 +320,13 @@ namespace KostasBan.Lens
             BeginEntry(entry, styles, metrics);
 
             var rect = GUILayoutUtility.GetRect(metrics.IsCompact ? metrics.OptionPopupWidth : 160f, metrics.ControlHeight, GUILayout.Width(metrics.IsCompact ? metrics.OptionPopupWidth : 180f), GUILayout.MinHeight(metrics.ControlHeight));
+            var ratio = entry.GetProgressRatio();
+            var displayValue = entry.DisplayValue;
             GUI.Box(rect, GUIContent.none);
             var fill = rect;
-            fill.width *= entry.GetProgressRatio();
+            fill.width *= ratio;
             GUI.Box(fill, GUIContent.none);
-            GUI.Label(rect, entry.DisplayValue, styles.Value);
+            GUI.Label(rect, displayValue, styles.Value);
 
             DrawInfoButton(entry, entryId, state, metrics);
             EndEntry(metrics);
@@ -385,11 +396,6 @@ namespace KostasBan.Lens
             {
                 GUILayout.EndVertical();
             }
-        }
-
-        private static string BuildEntryId(string sectionTitle, LensEntry entry)
-        {
-            return $"{sectionTitle}/{entry.Kind}/{entry.Key}/{entry.CustomTypeId}";
         }
     }
 }

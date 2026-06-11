@@ -63,7 +63,7 @@ Install the package, add a provider, register it during bootstrap, then open Len
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay that can be used in Editor, development builds, staging, QA, and controlled internal builds.
 
-V0.9 is deliberately small, extensible, responsive, and easier to attach to QA reports:
+V0.10 is deliberately small, extensible, responsive, and easier to attach to QA reports:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -83,6 +83,7 @@ V0.9 is deliberately small, extensible, responsive, and easier to attach to QA r
 - Copy-to-clipboard text debug report
 - Copy-to-clipboard JSON debug report
 - Local screenshot capture for QA evidence
+- Cached provider refresh to reduce runtime polling
 - Basic sample scene
 - Provider cookbook samples
 - Runtime-safe package tests
@@ -281,6 +282,7 @@ Lens defaults to automatic scaling:
 ```csharp
 var console = gameObject.AddComponent<LensRuntimeConsole>();
 console.UiScaleMode = LensUiScaleMode.Auto;
+console.RefreshIntervalSeconds = 0.25f;
 ```
 
 For project-specific tuning, use fixed scale or auto-scale clamps:
@@ -292,6 +294,19 @@ console.SetAutoScaleLimits(1f, 3f);
 ```
 
 The default auto mode uses DPI when available, falls back to portrait screen size when DPI is unavailable, and clamps scale to avoid unreadably small or oversized UI.
+
+## Provider Performance
+
+Lens caches section entries while the console is open and refreshes them on an interval. The default refresh interval is `0.25` seconds:
+
+```csharp
+console.RefreshIntervalSeconds = 0.25f;
+console.RefreshNow();
+```
+
+Set `RefreshIntervalSeconds` to `0` if a project needs every visible IMGUI pass to rebuild provider entries.
+
+Providers should still keep `GetEntries()` cheap. Avoid slow service calls, large allocations, file IO, network requests, or expensive scene scans inside `GetEntries()`. Expensive systems should cache their own snapshots and expose those snapshots through Lens providers.
 
 ## Internal Build Policy
 
@@ -331,7 +346,7 @@ Lens builds readable plain text and JSON reports from the currently registered p
 ```text
 Lens Debug Report
 Generated: 2026-06-09T12:30:00.0000000Z
-Lens Version: 0.9.0
+Lens Version: 0.10.0
 
 [Build Info]
 App Version: 0.1.0
@@ -357,7 +372,7 @@ JSON reports use this shape:
 ```json
 {
   "generatedUtc": "2026-06-09T12:30:00.0000000Z",
-  "lensVersion": "0.9.0",
+  "lensVersion": "0.10.0",
   "screenshotPath": "",
   "sections": [
     {
@@ -406,7 +421,7 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V0.9.
+These integrations are intentionally out of scope for V0.10.
 
 ## Roadmap
 

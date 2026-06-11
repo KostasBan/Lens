@@ -406,6 +406,11 @@ namespace KostasBan.Lens
                 return customSearchText(CustomPayload) ?? string.Empty;
             }
 
+            if ((Kind == LensEntryKind.SingleSelect || Kind == LensEntryKind.MultiSelect) && selectData != null)
+            {
+                return selectData.SearchText;
+            }
+
             return Value;
         }
 
@@ -552,6 +557,7 @@ namespace KostasBan.Lens
             private readonly Func<IReadOnlyList<T>> getMulti;
             private readonly Action<IReadOnlyList<T>> setMulti;
             private readonly IReadOnlyList<LensOption<T>> options;
+            private readonly string searchText;
 
             public LensSelectData(Func<T> getSingle, Action<T> setSingle, Func<IReadOnlyList<T>> getMulti, Action<IReadOnlyList<T>> setMulti, IReadOnlyList<LensOption<T>> options)
             {
@@ -560,6 +566,7 @@ namespace KostasBan.Lens
                 this.getMulti = getMulti;
                 this.setMulti = setMulti;
                 this.options = options ?? throw new ArgumentNullException(nameof(options));
+                searchText = BuildSearchText(this.options);
             }
 
             public int Count => options.Count;
@@ -578,7 +585,7 @@ namespace KostasBan.Lens
                 }
             }
 
-            public string SearchText => string.Join(" ", GetLabels());
+            public string SearchText => searchText;
 
             public string GetLabel(int index)
             {
@@ -654,12 +661,20 @@ namespace KostasBan.Lens
                 return -1;
             }
 
-            private IEnumerable<string> GetLabels()
+            private static string BuildSearchText(IReadOnlyList<LensOption<T>> options)
             {
+                if (options.Count == 0)
+                {
+                    return string.Empty;
+                }
+
+                var labels = new string[options.Count];
                 for (var i = 0; i < options.Count; i++)
                 {
-                    yield return options[i].Label;
+                    labels[i] = options[i].Label;
                 }
+
+                return string.Join(" ", labels);
             }
 
             private string FormatMulti(bool[] selected)

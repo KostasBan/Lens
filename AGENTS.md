@@ -42,6 +42,7 @@ yield return LensEntry.Button("Unlock Debug Content", system.UnlockDebugContent,
 ```
 
 Lens should render and invoke callbacks; the consuming system should own state, validation, permissions, and side effects.
+Keep `GetEntries()` cheap. Cache expensive data in the owning system and expose snapshots through Lens instead of scanning scenes, doing file/network IO, or calling slow services from a provider.
 Use redaction for values that help QA but should not appear raw in the overlay or reports. Use confirmation for progression, inventory, account, save, tutorial, or content-unlock actions.
 Use `LensOption<T>` labels for option entries, and use `LensEntry.Custom` plus `LensEntryDrawerRegistry` for project-owned controls that do not belong in Lens core.
 Use `LensEntryDrawContext.IsCompact` and logical screen metrics when writing custom drawers so they remain usable on mobile portrait screens.

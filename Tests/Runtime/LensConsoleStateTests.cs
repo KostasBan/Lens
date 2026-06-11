@@ -66,5 +66,18 @@ namespace KostasBan.Lens.Tests
 
             Assert.IsFalse(state.IsActionConfirmationPending("Actions/Unlock"));
         }
+
+        [Test]
+        public void MultiSelectDraftReusesArrayWhenLengthMatches()
+        {
+            var state = new LensConsoleState();
+            var first = state.GetMultiSelectDraft("Flags/Options", new[] { true, false, true });
+
+            state.ResetMultiSelectDraft("Flags/Options", new[] { false, true, false });
+            var second = state.GetMultiSelectDraft("Flags/Options", new[] { true, true, true });
+
+            Assert.AreSame(first, second);
+            CollectionAssert.AreEqual(new[] { false, true, false }, second);
+        }
     }
 }

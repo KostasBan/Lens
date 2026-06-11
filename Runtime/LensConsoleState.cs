@@ -16,6 +16,7 @@ namespace KostasBan.Lens
         private readonly Dictionary<string, string> numberDrafts = new Dictionary<string, string>();
         private readonly Dictionary<string, float> sliderDrafts = new Dictionary<string, float>();
         private readonly Dictionary<string, bool[]> multiSelectDrafts = new Dictionary<string, bool[]>();
+        private readonly Dictionary<LensEntryIdKey, string> entryIds = new Dictionary<LensEntryIdKey, string>();
 
         private string pendingActionKey = string.Empty;
 
@@ -112,6 +113,19 @@ namespace KostasBan.Lens
             statusUntil = Time.realtimeSinceStartup + StatusDuration;
         }
 
+        public string GetEntryId(string sectionTitle, LensEntry entry)
+        {
+            var key = new LensEntryIdKey(sectionTitle, entry.Kind, entry.Key, entry.CustomTypeId);
+            if (entryIds.TryGetValue(key, out var entryId))
+            {
+                return entryId;
+            }
+
+            entryId = string.Concat(sectionTitle ?? string.Empty, "/", entry.Kind.ToString(), "/", entry.Key ?? string.Empty, "/", entry.CustomTypeId ?? string.Empty);
+            entryIds[key] = entryId;
+            return entryId;
+        }
+
         public string GetNumberDraft(string key, float currentValue)
         {
             if (numberDrafts.TryGetValue(key, out var draft))
@@ -186,12 +200,28 @@ namespace KostasBan.Lens
 
         public void SetMultiSelectDraft(string key, bool[] value)
         {
-            multiSelectDrafts[key] = value != null ? (bool[])value.Clone() : new bool[0];
+            CopyMultiSelectDraft(key, value);
         }
 
         public void ResetMultiSelectDraft(string key, bool[] currentValue)
         {
-            multiSelectDrafts[key] = currentValue != null ? (bool[])currentValue.Clone() : new bool[0];
+            CopyMultiSelectDraft(key, currentValue);
+        }
+
+        private void CopyMultiSelectDraft(string key, bool[] value)
+        {
+            value = value ?? new bool[0];
+
+            if (!multiSelectDrafts.TryGetValue(key, out var draft) || draft.Length != value.Length)
+            {
+                multiSelectDrafts[key] = (bool[])value.Clone();
+                return;
+            }
+
+            for (var i = 0; i < value.Length; i++)
+            {
+                draft[i] = value[i];
+            }
         }
 
         public T GetObjectState<T>(string key, T fallback)
@@ -202,6 +232,47 @@ namespace KostasBan.Lens
         public void SetObjectState<T>(string key, T value)
         {
             objectStates[key ?? string.Empty] = value;
+        }
+
+        private readonly struct LensEntryIdKey : System.IEquatable<LensEntryIdKey>
+        {
+            private readonly string sectionTitle;
+            private readonly LensEntryKind kind;
+            private readonly string entryKey;
+            private readonly string customTypeId;
+
+            public LensEntryIdKey(string sectionTitle, LensEntryKind kind, string entryKey, string customTypeId)
+            {
+                this.sectionTitle = sectionTitle ?? string.Empty;
+                this.kind = kind;
+                this.entryKey = entryKey ?? string.Empty;
+                this.customTypeId = customTypeId ?? string.Empty;
+            }
+
+            public bool Equals(LensEntryIdKey other)
+            {
+                return kind == other.kind &&
+                       string.Equals(sectionTitle, other.sectionTitle, System.StringComparison.Ordinal) &&
+                       string.Equals(entryKey, other.entryKey, System.StringComparison.Ordinal) &&
+                       string.Equals(customTypeId, other.customTypeId, System.StringComparison.Ordinal);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is LensEntryIdKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hash = sectionTitle.GetHashCode();
+                    hash = (hash * 397) ^ (int)kind;
+                    hash = (hash * 397) ^ entryKey.GetHashCode();
+                    hash = (hash * 397) ^ customTypeId.GetHashCode();
+                    return hash;
+                }
+            }
         }
     }
 }

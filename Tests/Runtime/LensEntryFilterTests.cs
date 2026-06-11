@@ -46,5 +46,20 @@ namespace KostasBan.Lens.Tests
             Assert.IsTrue(filter.MatchesEntry(info, "experiment"));
             Assert.IsTrue(filter.MatchesEntry(custom, "hidden"));
         }
+
+        [Test]
+        public void MatchesSelectOptionLabels()
+        {
+            var filter = new LensEntryFilter();
+            var current = "dev";
+            var options = new[]
+            {
+                new LensOption<string>("dev", "Development"),
+                new LensOption<string>("stage", "Staging")
+            };
+            var entry = LensEntry.SingleSelect("Environment", () => current, value => current = value, options);
+
+            Assert.IsTrue(filter.MatchesEntry(entry, "staging"));
+        }
     }
 }

@@ -13,15 +13,17 @@ namespace KostasBan.Lens
         [SerializeField] private float fixedUiScale = 1f;
         [SerializeField] private float minAutoScale = 1f;
         [SerializeField] private float maxAutoScale = 3f;
+        [SerializeField] private float refreshIntervalSeconds = 0.25f;
 
-        private readonly List<LensEntry> entryBuffer = new List<LensEntry>();
-        private readonly List<LensEntry> visibleEntries = new List<LensEntry>();
         private readonly LensConsoleState state = new LensConsoleState();
         private readonly LensEntryFilter filter = new LensEntryFilter();
         private readonly LensEntryDrawer entryDrawer = new LensEntryDrawer();
         private readonly LensGuiStyles styles = new LensGuiStyles();
+        private readonly LensSectionCache sectionCache = new LensSectionCache();
 
         internal bool IsOpen => state.IsOpen;
+
+        internal LensRuntimeDiagnostics Diagnostics => sectionCache.Diagnostics;
 
         public LensUiScaleMode UiScaleMode
         {
@@ -35,10 +37,21 @@ namespace KostasBan.Lens
             set => fixedUiScale = Mathf.Clamp(value, 0.5f, 4f);
         }
 
+        public float RefreshIntervalSeconds
+        {
+            get => refreshIntervalSeconds;
+            set => refreshIntervalSeconds = Mathf.Max(0f, value);
+        }
+
         public void SetAutoScaleLimits(float minScale, float maxScale)
         {
             minAutoScale = Mathf.Max(0.5f, minScale);
             maxAutoScale = Mathf.Max(minAutoScale, maxScale);
+        }
+
+        public void RefreshNow()
+        {
+            sectionCache.RequestRefresh();
         }
 
         private void Awake()
@@ -54,6 +67,7 @@ namespace KostasBan.Lens
             }
 
             state.Open();
+            RefreshNow();
         }
 
         public void Close()
@@ -68,7 +82,13 @@ namespace KostasBan.Lens
                 return;
             }
 
+            var wasOpen = state.IsOpen;
             state.Toggle();
+
+            if (!wasOpen && state.IsOpen)
+            {
+                RefreshNow();
+            }
         }
 
         private void OnGUI()
@@ -108,13 +128,14 @@ namespace KostasBan.Lens
                 return;
             }
 
-            state.Toggle();
+            Toggle();
             currentEvent.Use();
         }
 
         private void DrawPanel(LensLayoutMetrics metrics)
         {
             var rect = metrics.PanelRect;
+            sectionCache.RefreshIfNeeded(LensSectionRegistry.Providers, state, filter, state.SearchText, Time.realtimeSinceStartup, refreshIntervalSeconds);
 
             GUILayout.BeginArea(rect, GUIContent.none, styles.Panel);
             GUILayout.BeginVertical();
@@ -124,9 +145,9 @@ namespace KostasBan.Lens
 
             state.ScrollPosition = GUILayout.BeginScrollView(state.ScrollPosition, GUILayout.ExpandHeight(true));
 
-            foreach (var provider in LensSectionRegistry.Providers)
+            foreach (var section in sectionCache.Sections)
             {
-                DrawProvider(provider, metrics);
+                DrawProvider(section, metrics);
             }
 
             GUILayout.EndScrollView();
@@ -169,55 +190,33 @@ namespace KostasBan.Lens
             if (!string.Equals(nextSearch, state.SearchText, StringComparison.Ordinal))
             {
                 state.SearchText = nextSearch ?? string.Empty;
+                RefreshNow();
             }
 
             if (!string.IsNullOrEmpty(state.SearchText) && GUILayout.Button("Clear", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 state.SearchText = string.Empty;
+                RefreshNow();
             }
 
             GUILayout.EndHorizontal();
             GUILayout.Space(8f);
         }
 
-        private void DrawProvider(ILensSectionProvider provider, LensLayoutMetrics metrics)
+        private void DrawProvider(LensCachedSection section, LensLayoutMetrics metrics)
         {
-            if (provider == null)
+            if (section == null)
             {
                 return;
             }
 
-            var sectionTitle = string.IsNullOrWhiteSpace(provider.SectionTitle) ? "Untitled" : provider.SectionTitle;
-
-            entryBuffer.Clear();
-            visibleEntries.Clear();
-
-            foreach (var entry in provider.GetEntries())
-            {
-                entryBuffer.Add(entry);
-            }
-
-            var sectionMatchesSearch = filter.MatchesSection(sectionTitle, state.SearchText);
-
-            foreach (var entry in entryBuffer)
-            {
-                if (!state.HasSearch || sectionMatchesSearch || filter.MatchesEntry(entry, state.SearchText))
-                {
-                    visibleEntries.Add(entry);
-                }
-            }
-
-            if (state.HasSearch && visibleEntries.Count == 0)
-            {
-                return;
-            }
-
+            var sectionTitle = section.Title;
             var expanded = state.HasSearch || state.IsSectionExpanded(sectionTitle);
-            var marker = expanded ? "[-]" : "[+]";
 
-            if (GUILayout.Button($"{marker} {sectionTitle} ({visibleEntries.Count})", styles.SectionHeader, GUILayout.MinHeight(metrics.ControlHeight)))
+            if (GUILayout.Button(section.GetHeaderLabel(expanded), styles.SectionHeader, GUILayout.MinHeight(metrics.ControlHeight)))
             {
                 state.ToggleSection(sectionTitle);
+                RefreshNow();
             }
 
             if (!expanded)
@@ -226,7 +225,7 @@ namespace KostasBan.Lens
                 return;
             }
 
-            foreach (var entry in visibleEntries)
+            foreach (var entry in section.VisibleEntries)
             {
                 entryDrawer.Draw(entry, sectionTitle, state, styles, metrics);
             }
@@ -290,21 +289,29 @@ namespace KostasBan.Lens
 
         private void CopyTextReport()
         {
+            ForceRefreshAllSections();
             GUIUtility.systemCopyBuffer = LensReportBuilder.BuildTextReport(LensSectionRegistry.Providers);
             state.SetStatus("Text report copied.");
         }
 
         private void CopyJsonReport()
         {
+            ForceRefreshAllSections();
             GUIUtility.systemCopyBuffer = LensReportBuilder.BuildJsonReport(LensSectionRegistry.Providers);
             state.SetStatus("JSON report copied.");
         }
 
         private void CaptureScreenshot()
         {
+            ForceRefreshAllSections();
             var screenshot = LensReportCapture.CaptureScreenshot();
             GUIUtility.systemCopyBuffer = screenshot.Path;
             state.SetStatus($"Screenshot path copied: {screenshot.Path}");
+        }
+
+        private void ForceRefreshAllSections()
+        {
+            sectionCache.ForceRefresh(LensSectionRegistry.Providers, state, filter, state.SearchText, Time.realtimeSinceStartup, true);
         }
 
         private void DrawFloatingButton(LensLayoutMetrics metrics)

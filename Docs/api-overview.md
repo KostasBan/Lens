@@ -33,11 +33,15 @@ Use `LensEntry` factory methods for common controls:
 
 Providers own all state and callbacks. Lens renders controls, invokes callbacks, and reports current values.
 
+Keep `GetEntries()` cheap. Cache expensive data in the owning system and expose a snapshot through Lens instead of doing slow work during UI refresh.
+
 ## Runtime Policy
 
 `LensRuntimePolicy` controls whether Lens is allowed at runtime. By default, Lens is enabled only in Editor, Development Build, or builds compiled with `LENS_ENABLED`.
 
 `LensRuntimeConsole.Open()` and `Toggle()` do nothing when the policy disallows Lens. `Close()` always works.
+
+Use `RefreshIntervalSeconds` to control how often the console rebuilds provider entries while open. The default is `0.25` seconds. Use `RefreshNow()` when a project knows provider data changed and wants the next draw to rebuild cached entries.
 
 ## Redaction And Actions
 
