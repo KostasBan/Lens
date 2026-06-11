@@ -33,13 +33,29 @@ jobs:
             --exclude='test-package' \
             ./ test-package/
 
+      - name: Check Unity credentials
+        id: unity-credentials
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        run: |
+          if [[ -n "$UNITY_LICENSE" || -n "$UNITY_SERIAL" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Unity license secrets are not configured; skipping Unity EditMode tests."
+          fi
+
       - name: Run EditMode tests
         id: tests
+        if: steps.unity-credentials.outputs.configured == 'true'
         uses: game-ci/unity-test-runner@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           packageMode: true
           projectPath: test-package
@@ -50,8 +66,8 @@ jobs:
           checkName: Unity ${{ matrix.unityVersion }} EditMode Test Results
 
       - name: Upload test artifacts
-        if: always()
+        if: always() && steps.unity-credentials.outputs.configured == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: unity-editmode-test-results-${{ matrix.unityVersion }}
-          path: ${{ steps.tests.outputs.artifactsPath }}
+          path: editmode-artifacts
