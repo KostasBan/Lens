@@ -6,9 +6,9 @@ namespace KostasBan.Lens
 {
     internal sealed class LensEntryDrawer
     {
-        public void Draw(LensEntry entry, string sectionTitle, LensConsoleState state, LensGuiStyles styles, LensLayoutMetrics metrics)
+        public void Draw(LensEntry entry, string sectionTitle, string sectionIdentity, LensConsoleState state, LensGuiStyles styles, LensLayoutMetrics metrics)
         {
-            var entryId = state.GetEntryId(sectionTitle, entry);
+            var entryId = state.GetEntryId(sectionIdentity, entry);
 
             if (entry.IsSensitive)
             {
@@ -29,7 +29,7 @@ namespace KostasBan.Lens
                     DrawNumber(entry, entryId, state, styles, metrics);
                     break;
                 case LensEntryKind.Button:
-                    DrawButton(entry, sectionTitle, entryId, state, styles, metrics);
+                    DrawButton(entry, sectionIdentity, entryId, state, styles, metrics);
                     break;
                 case LensEntryKind.Slider:
                     DrawSlider(entry, entryId, state, styles, metrics);
@@ -138,12 +138,12 @@ namespace KostasBan.Lens
             EndEntry(metrics);
         }
 
-        private static void DrawButton(LensEntry entry, string sectionTitle, string entryId, LensConsoleState state, LensGuiStyles styles, LensLayoutMetrics metrics)
+        private static void DrawButton(LensEntry entry, string sectionIdentity, string entryId, LensConsoleState state, LensGuiStyles styles, LensLayoutMetrics metrics)
         {
             BeginEntry(entry, entryId, state, styles, metrics);
 
             var label = string.IsNullOrWhiteSpace(entry.ActionLabel) ? entry.Key : entry.ActionLabel;
-            var actionKey = $"{sectionTitle}/{entry.Key}/{label}";
+            var actionKey = $"{sectionIdentity}/{entry.Key}/{label}";
 
             if (entry.RequiresConfirmation && state.IsActionConfirmationPending(actionKey))
             {

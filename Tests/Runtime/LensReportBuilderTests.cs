@@ -23,7 +23,7 @@ namespace KostasBan.Lens.Tests
 
             StringAssert.Contains("Lens Debug Report", report);
             StringAssert.Contains("Report Schema: 1", report);
-            StringAssert.Contains("Lens Version: 1.0.0", report);
+            StringAssert.Contains($"Lens Version: {LensPackageInfo.Version}", report);
             StringAssert.Contains("Unity Version:", report);
             StringAssert.Contains("App Version:", report);
             StringAssert.Contains("[Build]", report);
@@ -105,7 +105,7 @@ namespace KostasBan.Lens.Tests
             });
 
             StringAssert.Contains("\"schemaVersion\": 1", report);
-            StringAssert.Contains("\"lensVersion\": \"1.0.0\"", report);
+            StringAssert.Contains($"\"lensVersion\": \"{LensPackageInfo.Version}\"", report);
             StringAssert.Contains("\"metadata\":", report);
             StringAssert.Contains("\"projectBuildNumber\": \"build-42\"", report);
             StringAssert.Contains("\"title\": \"Build\"", report);

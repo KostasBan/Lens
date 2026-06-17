@@ -37,6 +37,7 @@ jobs:
 
           $requiredPaths = @(
             "Runtime/KostasBan.Lens.asmdef",
+            "Runtime/ILensIdentifiedSectionProvider.cs",
             "Runtime/ILensSectionProvider.cs",
             "Runtime/ILensEntryDrawer.cs",
             "Runtime/LensEntry.cs",
@@ -63,7 +64,9 @@ jobs:
             "SECURITY.md",
             "AGENTS.md",
             "Docs/agent-usage.md",
+            "Docs/architecture-decisions.md",
             "Docs/api-overview.md",
+            "Docs/future-integrations.md",
             "CHANGELOG.md",
             "CONTRIBUTING.md",
             "Samples~/Provider Cookbook/Scripts/LensCookbookBootstrap.cs",

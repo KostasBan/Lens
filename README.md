@@ -40,9 +40,10 @@ public sealed class MyLensSection : ILensSectionProvider
 }
 
 LensSectionRegistry.Register(new MyLensSection());
+LensRuntimeConsole.EnsureExists();
 ```
 
-Add `LensRuntimeConsole` to a scene object or create it during bootstrap, then press `F1` or use the floating button.
+Create the console once during bootstrap with `LensRuntimeConsole.EnsureExists()`, then press `F1` or use the floating button.
 
 ## How To Use Lens
 
@@ -195,6 +196,21 @@ public sealed class MyGameLensSection : ILensSectionProvider
 }
 ```
 
+If multiple providers can share the same title, implement `ILensIdentifiedSectionProvider` so fold state, entry drafts, popups, and custom drawer state remain stable:
+
+```csharp
+public sealed class EconomyLensSection : ILensIdentifiedSectionProvider
+{
+    public string SectionId => "game.economy";
+    public string SectionTitle => "Economy";
+
+    public IEnumerable<LensEntry> GetEntries()
+    {
+        yield return new LensEntry("Coins", "120");
+    }
+}
+```
+
 Register it at runtime:
 
 ```csharp
@@ -303,10 +319,12 @@ Custom drawers can inspect `LensEntryDrawContext.UiScale`, `IsCompact`, `Logical
 Lens defaults to automatic scaling:
 
 ```csharp
-var console = gameObject.AddComponent<LensRuntimeConsole>();
+var console = LensRuntimeConsole.EnsureExists();
 console.UiScaleMode = LensUiScaleMode.Auto;
 console.RefreshIntervalSeconds = 0.25f;
 ```
+
+Prefer one bootstrap-created console per app. `LensRuntimeConsole.EnsureExists()` returns an existing console when one is already loaded, otherwise it creates a new `Lens Runtime Console` object. If you place console prefabs in scenes manually, make sure your project avoids duplicate consoles.
 
 For project-specific tuning, use fixed scale or auto-scale clamps:
 
@@ -394,7 +412,7 @@ Lens builds readable plain text and JSON reports from the currently registered p
 Lens Debug Report
 Report Schema: 1
 Generated: 2026-06-09T12:30:00.0000000Z
-Lens Version: 1.0.0
+Lens Version: 1.1.0
 Unity Version: 6000.3.16f1
 App Version: 0.1.0
 Platform: WindowsEditor
@@ -429,7 +447,7 @@ JSON reports use this shape:
 {
   "schemaVersion": 1,
   "generatedUtc": "2026-06-09T12:30:00.0000000Z",
-  "lensVersion": "1.0.0",
+  "lensVersion": "1.1.0",
   "screenshotPath": "",
   "metadata": {
     "unityVersion": "6000.3.16f1",
@@ -491,51 +509,32 @@ Lens is designed so future systems can register their own sections without becom
 - Pulse can expose recent analytics events, event counts, session context, and funnel/debug state.
 - Signal can attach Lens debug reports to smoke-test or QA output.
 
-These integrations are intentionally out of scope for V1.0.
+These integrations are intentionally out of scope for Lens core. See `Docs/future-integrations.md` for integration sketches.
 
 ## Roadmap
 
-Near-term:
-
-- Screenshots and visual README assets
-- Domain-reload-off safety for Unity 6 projects:
-  - reset `LensSectionRegistry` on subsystem registration,
-  - document a `LensSectionBehaviour` register/unregister lifecycle pattern,
-  - investigate provider leak detection for destroyed scene-owned providers.
-- Mobile-ready report retrieval:
-  - make text/JSON reports and screenshots easier to retrieve from mobile devices,
-  - include device model, OS, app version, build number, and timestamp in reports.
-- LensEntry API tightening before 1.0:
-  - reduce kind-specific public surface where practical,
-  - make invalid kind/value access fail with clear errors,
-  - keep custom entry drawers as the extension point for project-specific controls.
-- Provider allocation guidance:
-  - document cached entry/delegate patterns for providers that refresh often,
-  - avoid per-refresh closure allocations in high-frequency debug sections.
-- Pre-1.0 API hygiene:
-  - mark non-public API as `internal`,
-  - make registry null argument behavior consistent,
-  - document Lens as main-thread-only rather than adding unnecessary locks.
-
-Later:
+Near-term ideas:
 
 - Configurable mobile activation gestures, such as a multi-finger long press.
-- JSON report schema versioning for downstream tooling and AI-assisted bug triage.
 - Unity CI matrix across supported Unity versions.
 - Console log capture.
-- Local flag overrides
-- Production-safe redaction rules
-- Bug report form or backend handoff
-- Optional adapters for project DI patterns such as Zenject
+- Local flag overrides.
+- Bug report form or backend handoff.
+- Optional adapters for project DI patterns such as Zenject.
 - Optional richer UI path if IMGUI becomes limiting, while keeping provider APIs UI-agnostic.
+
+Already addressed in the stable line: screenshots, mobile report retrieval, schema versioning, domain-reload-off reset, `LensSectionBehaviour`, redaction, provider allocation guidance, wrong-kind guards, and main-thread-only documentation.
 
 ## For Agents And Contributors
 
 - See `AGENTS.md` for repo-level coding-agent guidance.
 - See `Docs/api-overview.md` for the public API overview.
 - See `Docs/agent-usage.md` for how agents should expose important runtime values in consuming Unity projects.
+- See `Docs/architecture-decisions.md` and `Docs/future-integrations.md` for design rationale and integration sketches.
 - See `SECURITY.md` for internal-build safety guidance.
 - See `CONTRIBUTING.md` for validation and versioning guidance.
+
+The public package validation workflow is always runnable. Unity EditMode tests run when repository Unity license secrets are configured; otherwise that workflow reports a skipped Unity test run.
 
 ## License
 

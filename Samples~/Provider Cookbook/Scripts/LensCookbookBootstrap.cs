@@ -24,11 +24,7 @@ namespace KostasBan.Lens.Samples
                 LensSectionRegistry.Register(provider);
             }
 
-            if (FindFirstObjectByType<LensRuntimeConsole>() == null)
-            {
-                var lensObject = new GameObject("Lens Runtime Console");
-                lensObject.AddComponent<LensRuntimeConsole>();
-            }
+            LensRuntimeConsole.EnsureExists();
         }
 
         private void OnDestroy()

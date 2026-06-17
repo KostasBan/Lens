@@ -95,14 +95,14 @@ namespace KostasBan.Lens
             expandedPopups[entryId ?? string.Empty] = false;
         }
 
-        public bool IsSectionExpanded(string sectionTitle)
+        public bool IsSectionExpanded(string sectionIdentity)
         {
-            return !expandedSections.TryGetValue(sectionTitle ?? string.Empty, out var expanded) || expanded;
+            return !expandedSections.TryGetValue(sectionIdentity ?? string.Empty, out var expanded) || expanded;
         }
 
-        public void ToggleSection(string sectionTitle)
+        public void ToggleSection(string sectionIdentity)
         {
-            var key = sectionTitle ?? string.Empty;
+            var key = sectionIdentity ?? string.Empty;
             expandedSections[key] = !IsSectionExpanded(key);
         }
 
@@ -113,15 +113,15 @@ namespace KostasBan.Lens
             statusUntil = Time.realtimeSinceStartup + StatusDuration;
         }
 
-        public string GetEntryId(string sectionTitle, LensEntry entry)
+        public string GetEntryId(string sectionIdentity, LensEntry entry)
         {
-            var key = new LensEntryIdKey(sectionTitle, entry.Kind, entry.Key, entry.CustomTypeId);
+            var key = new LensEntryIdKey(sectionIdentity, entry.Kind, entry.Key, entry.CustomTypeId);
             if (entryIds.TryGetValue(key, out var entryId))
             {
                 return entryId;
             }
 
-            entryId = string.Concat(sectionTitle ?? string.Empty, "/", entry.Kind.ToString(), "/", entry.Key ?? string.Empty, "/", entry.CustomTypeId ?? string.Empty);
+            entryId = string.Concat(sectionIdentity ?? string.Empty, "/", entry.Kind.ToString(), "/", entry.Key ?? string.Empty, "/", entry.CustomTypeId ?? string.Empty);
             entryIds[key] = entryId;
             return entryId;
         }

@@ -22,6 +22,8 @@ Register and unregister the provider with `LensSectionRegistry` during the owner
 
 For scene-owned providers, derive from `LensSectionBehaviour` so registration follows `OnEnable` and `OnDisable`. Lens resets static registry state on subsystem registration, which keeps Enter Play Mode with domain reload disabled from carrying providers across sessions.
 
+When duplicate section titles are possible, implement `ILensIdentifiedSectionProvider` and return a stable `SectionId`. Lens uses the ID for fold state, entry drafts, popups, and custom drawer state while keeping `SectionTitle` as the visible label.
+
 ## Entries
 
 Use `LensEntry` factory methods for common controls:
@@ -46,6 +48,8 @@ Lens is main-thread-only. Providers should be called from Unity's frame/update f
 `LensRuntimeConsole.Open()` and `Toggle()` do nothing when the policy disallows Lens. `Close()` always works.
 
 Use `RefreshIntervalSeconds` to control how often the console rebuilds provider entries while open. The default is `0.25` seconds. Use `RefreshNow()` when a project knows provider data changed and wants the next draw to rebuild cached entries.
+
+Use `LensRuntimeConsole.EnsureExists()` during bootstrap to create one console or reuse an already loaded console. Use `TryFindExisting(out var console)` when a project only wants to inspect whether a console is present.
 
 ## Redaction And Actions
 

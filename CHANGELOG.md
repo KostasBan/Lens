@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 - Portfolio Polish And Bootstrap Helpers
+
+- Added optional stable section identity through `ILensIdentifiedSectionProvider`.
+- Added `LensRuntimeConsole.TryFindExisting` and `LensRuntimeConsole.EnsureExists` bootstrap helpers.
+- Updated samples to use the console bootstrap helper.
+- Added architecture decision and future integration docs.
+- Cleaned up README roadmap/version guidance for the post-1.0 package.
+
 ## 1.0.1 - Mobile Portrait Polish
 
 - Slimmed compact portrait controls and footer buttons.

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace KostasBan.Lens
 {
@@ -87,8 +89,8 @@ namespace KostasBan.Lens
                     }
 
                     var section = FindExistingSection(provider) ?? new LensCachedSection(provider);
-                    section.RefreshTitle();
-                    var expanded = hasSearch || state.IsSectionExpanded(section.Title);
+                    section.RefreshIdentityAndTitle();
+                    var expanded = hasSearch || state.IsSectionExpanded(section.Identity);
                     var shouldFetchEntries = hasSearch || expanded || includeCollapsedSections;
 
                     if (shouldFetchEntries)
@@ -137,10 +139,12 @@ namespace KostasBan.Lens
         public LensCachedSection(ILensSectionProvider provider)
         {
             Provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            RefreshTitle();
+            RefreshIdentityAndTitle();
         }
 
         public ILensSectionProvider Provider { get; }
+
+        public string Identity { get; private set; }
 
         public string Title { get; private set; }
 
@@ -150,8 +154,10 @@ namespace KostasBan.Lens
 
         public int DisplayEntryCount => Entries.Count;
 
-        public void RefreshTitle()
+        public void RefreshIdentityAndTitle()
         {
+            Identity = ResolveIdentity(Provider);
+
             var nextTitle = string.IsNullOrWhiteSpace(Provider.SectionTitle) ? "Untitled" : Provider.SectionTitle;
             if (string.Equals(Title, nextTitle, StringComparison.Ordinal))
             {
@@ -160,6 +166,16 @@ namespace KostasBan.Lens
 
             Title = nextTitle;
             headerLabel = null;
+        }
+
+        private static string ResolveIdentity(ILensSectionProvider provider)
+        {
+            if (provider is ILensIdentifiedSectionProvider identified && !string.IsNullOrWhiteSpace(identified.SectionId))
+            {
+                return identified.SectionId;
+            }
+
+            return string.Concat("provider:", RuntimeHelpers.GetHashCode(provider).ToString("X8", CultureInfo.InvariantCulture));
         }
 
         public void RefreshEntries()

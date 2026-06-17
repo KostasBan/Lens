@@ -30,9 +30,11 @@ Prefer adding an `ILensSectionProvider` owned by the system that owns the data. 
 
 ```csharp
 LensSectionRegistry.Register(new MySystemLensSection(mySystem));
+LensRuntimeConsole.EnsureExists();
 ```
 
 For scene-owned providers, prefer deriving from `LensSectionBehaviour` so registration follows `OnEnable` and `OnDisable`.
+When duplicate section titles are possible, implement `ILensIdentifiedSectionProvider` and provide a stable `SectionId`.
 
 Use callback entries for important mutable values:
 

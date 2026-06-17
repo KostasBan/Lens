@@ -21,7 +21,7 @@ The package should also import in projects using either legacy Input Manager, In
 The repository has two validation workflows:
 
 - `Package Validation` runs on pushes and pull requests. It checks package metadata, required files, version consistency, Unity meta files, and avoids legacy `UnityEngine.Input` polling.
-- `Unity EditMode Tests` runs on pushes, pull requests, and manual dispatch when Unity license secrets are configured for the repository.
+- `Unity EditMode Tests` runs on pushes, pull requests, and manual dispatch when Unity license secrets are configured for the repository. If those secrets are absent, the workflow reports that Unity tests were skipped; `Package Validation` is the guaranteed public CI signal.
 
 To enable the manual Unity workflow, configure the GitHub repository secrets expected by GameCI:
 
@@ -55,7 +55,7 @@ Use package versions to communicate intent:
 - Minor: additive public API or sample improvements.
 - Major: breaking public API changes.
 
-Tag releases with the package version, for example `v1.0.0`.
+Tag releases with the package version, for example `v1.1.0`.
 
 ## Safety
 

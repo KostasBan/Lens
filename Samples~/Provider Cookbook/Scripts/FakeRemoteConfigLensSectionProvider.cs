@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace KostasBan.Lens.Samples
 {
-    public sealed class FakeRemoteConfigLensSectionProvider : ILensSectionProvider
+    public sealed class FakeRemoteConfigLensSectionProvider : ILensIdentifiedSectionProvider
     {
         private static readonly LensOption<string>[] EnvironmentOptions =
         {
@@ -28,6 +28,8 @@ namespace KostasBan.Lens.Samples
         private string sampleApiKey = "fake-key-do-not-use";
 
         public string SectionTitle => "Cookbook Remote Config";
+
+        public string SectionId => "cookbook.remote-config";
 
         public IEnumerable<LensEntry> GetEntries()
         {

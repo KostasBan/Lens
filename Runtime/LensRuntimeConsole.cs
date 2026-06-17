@@ -6,6 +6,8 @@ namespace KostasBan.Lens
 {
     public sealed class LensRuntimeConsole : MonoBehaviour
     {
+        private const string DefaultGameObjectName = "Lens Runtime Console";
+
         [SerializeField] private KeyCode toggleKey = KeyCode.F1;
         [SerializeField] private bool showFloatingButton = true;
         [SerializeField] private string floatingButtonLabel = "Lens";
@@ -25,6 +27,37 @@ namespace KostasBan.Lens
         internal bool IsOpen => state.IsOpen;
 
         internal LensRuntimeDiagnostics Diagnostics => sectionCache.Diagnostics;
+
+        public static bool TryFindExisting(out LensRuntimeConsole console)
+        {
+            var consoles = FindObjectsByType<LensRuntimeConsole>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (var i = 0; i < consoles.Length; i++)
+            {
+                if (consoles[i] != null)
+                {
+                    console = consoles[i];
+                    return true;
+                }
+            }
+
+            console = null;
+            return false;
+        }
+
+        public static LensRuntimeConsole EnsureExists(string gameObjectName = DefaultGameObjectName)
+        {
+            if (TryFindExisting(out var console))
+            {
+                return console;
+            }
+
+            if (string.IsNullOrWhiteSpace(gameObjectName))
+            {
+                gameObjectName = DefaultGameObjectName;
+            }
+
+            return new GameObject(gameObjectName).AddComponent<LensRuntimeConsole>();
+        }
 
         public LensUiScaleMode UiScaleMode
         {
@@ -166,11 +199,12 @@ namespace KostasBan.Lens
             }
 
             var sectionTitle = section.Title;
-            var expanded = state.HasSearch || state.IsSectionExpanded(sectionTitle);
+            var sectionIdentity = section.Identity;
+            var expanded = state.HasSearch || state.IsSectionExpanded(sectionIdentity);
 
             if (GUILayout.Button(section.GetHeaderLabel(expanded), styles.SectionHeader, GUILayout.Height(metrics.ControlHeight)))
             {
-                state.ToggleSection(sectionTitle);
+                state.ToggleSection(sectionIdentity);
                 RefreshNow();
             }
 
@@ -182,7 +216,7 @@ namespace KostasBan.Lens
 
             foreach (var entry in section.VisibleEntries)
             {
-                entryDrawer.Draw(entry, sectionTitle, state, styles, metrics);
+                entryDrawer.Draw(entry, sectionTitle, sectionIdentity, state, styles, metrics);
             }
 
             GUILayout.Space(10f);

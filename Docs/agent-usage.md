@@ -51,10 +51,13 @@ public sealed class EconomyLensSection : ILensSectionProvider
 }
 ```
 
+If a project may register multiple providers with the same title, implement `ILensIdentifiedSectionProvider` and provide a stable `SectionId` such as `economy.wallet` or `remote-config.flags`.
+
 Register the provider from bootstrap or system initialization:
 
 ```csharp
 LensSectionRegistry.Register(new EconomyLensSection(economy));
+LensRuntimeConsole.EnsureExists();
 ```
 
 Unregister the same provider when its owner is disposed or destroyed.
