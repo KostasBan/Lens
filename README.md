@@ -10,11 +10,13 @@ Runtime systems register section providers, Lens renders those sections, and QA 
 
 ## Preview
 
-[![Lens runtime overlay showing build info and sample feature flag providers](Docs/images/lens-overlay.png)](Docs/media/lens-preview.mp4)
-
-[Watch the Lens preview video](Docs/media/lens-preview.mp4)
+![Lens runtime overlay preview showing foldable sections and feature flag values](Docs/media/lens-preview-overview.gif)
 
 Lens groups provider-owned sections, supports folding/search, exposes safe interactive entries, and keeps QA-facing report actions in the footer.
+
+| Edit Runtime Values | Search Sections | Export Reports |
+| --- | --- | --- |
+| ![Lens editing toggles, text, sliders, selects, and progress values](Docs/media/lens-preview-values.gif) | ![Lens filtering entries with the search field](Docs/media/lens-preview-search.gif) | ![Lens exporting a copied debug report](Docs/media/lens-preview-export.gif) |
 
 ## Quick Start
 
