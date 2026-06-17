@@ -2,7 +2,7 @@
 
 [![Package Validation](https://github.com/KostasBan/Lens/actions/workflows/package-validation.yml/badge.svg)](https://github.com/KostasBan/Lens/actions/workflows/package-validation.yml)
 [![Unity EditMode Tests](https://github.com/KostasBan/Lens/actions/workflows/unity-tests.yml/badge.svg)](https://github.com/KostasBan/Lens/actions/workflows/unity-tests.yml)
-[![Latest Release](https://img.shields.io/github/v/release/KostasBan/Lens?label=release)](https://github.com/KostasBan/Lens/releases)
+[![Latest Release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/KostasBan/Lens/releases/tag/v1.1.0)
 
 Lens is a small runtime debug/inspection panel for Unity projects. It gives developers and QA a quick way to inspect useful in-build state without attaching a debugger, rebuilding custom debug menus, or wiring every system directly into one UI.
 
