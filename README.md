@@ -118,12 +118,19 @@ Providers own data and callbacks. Lens owns rendering, filtering, report generat
 
 ## Screenshots
 
-Screenshots and video will be added once the visual pass is ready.
+Lens is built to stay readable in the Editor and in internal builds while keeping the integration surface small.
 
-```text
-Docs/images/lens-overlay.png
-Docs/images/lens-interactive-entries.png
-```
+![Lens runtime overlay showing build info and sample feature flag providers](Docs/images/lens-overlay.png)
+
+The runtime overlay groups provider-owned sections, supports folding/search, and keeps QA-facing actions in the footer.
+
+![Lens copied text report with metadata, redaction, entries, and recent events](Docs/images/lens-text-report.png)
+
+Text reports are meant for quick bug tickets and developer handoffs.
+
+![Lens JSON report opened in VS Code](Docs/images/lens-json-report.png)
+
+JSON reports include a schema version and structured metadata for tooling, automation, or AI-assisted triage.
 
 ## Install
 

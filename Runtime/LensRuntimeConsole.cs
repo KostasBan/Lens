@@ -168,7 +168,7 @@ namespace KostasBan.Lens
             var sectionTitle = section.Title;
             var expanded = state.HasSearch || state.IsSectionExpanded(sectionTitle);
 
-            if (GUILayout.Button(section.GetHeaderLabel(expanded), styles.SectionHeader, GUILayout.MinHeight(metrics.ControlHeight)))
+            if (GUILayout.Button(section.GetHeaderLabel(expanded), styles.SectionHeader, GUILayout.Height(metrics.ControlHeight)))
             {
                 state.ToggleSection(sectionTitle);
                 RefreshNow();

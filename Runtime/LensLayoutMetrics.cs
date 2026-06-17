@@ -36,7 +36,7 @@ namespace KostasBan.Lens
 
         public float SearchLabelWidth => IsCompact ? 0f : 64f;
 
-        public float PrimaryButtonWidth => IsCompact ? 132f : 160f;
+        public float PrimaryButtonWidth => IsCompact ? 126f : 160f;
 
         public float SmallButtonWidth => IsCompact ? 76f : 72f;
 
@@ -50,9 +50,13 @@ namespace KostasBan.Lens
 
         public float OptionPopupWidth => IsCompact ? Mathf.Min(LogicalScreenWidth - 48f, 320f) : 240f;
 
-        public float InfoButtonWidth => 34f;
+        public float InfoButtonWidth => IsCompact ? 26f : 34f;
 
-        public float ControlHeight => IsCompact ? 42f : 24f;
+        public float InfoButtonHeight => IsCompact ? 24f : ControlHeight;
+
+        public float ControlHeight => IsCompact ? 32f : 24f;
+
+        public float ProgressBarHeight => IsCompact ? 18f : ControlHeight;
 
         public Rect PanelRect => new Rect(Margin, Margin, Mathf.Max(1f, PanelMaxWidth), Mathf.Max(1f, PanelMaxHeight));
 

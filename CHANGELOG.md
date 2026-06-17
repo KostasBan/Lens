@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 - Mobile Portrait Polish
+
+- Slimmed compact portrait controls and footer buttons.
+- Moved compact info buttons beside entry labels to avoid empty value-row gaps.
+- Improved compact progress entry rendering by separating the label from the progress bar.
+- Added README screenshots for the runtime overlay and text/JSON report output.
+
 ## 1.0.0 - Stabilization And QA Retrieval
 
 - Added domain-reload-off runtime reset for static Lens state.

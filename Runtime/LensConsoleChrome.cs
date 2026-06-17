@@ -11,7 +11,7 @@ namespace KostasBan.Lens
             GUILayout.Label("Lens", styles.Title);
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button("Close", GUILayout.Width(metrics.SmallButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
+            if (GUILayout.Button("Close", GUILayout.Width(metrics.SmallButtonWidth), GUILayout.Height(metrics.ControlHeight)))
             {
                 state.Close();
             }
@@ -33,7 +33,7 @@ namespace KostasBan.Lens
                 GUILayout.Label("Search", styles.Key, GUILayout.Width(metrics.SearchLabelWidth));
             }
 
-            var nextSearch = GUILayout.TextField(state.SearchText, styles.SearchField, GUILayout.MinHeight(metrics.ControlHeight));
+            var nextSearch = GUILayout.TextField(state.SearchText, styles.SearchField, GUILayout.Height(metrics.ControlHeight));
 
             if (!string.Equals(nextSearch, state.SearchText, StringComparison.Ordinal))
             {
@@ -41,7 +41,7 @@ namespace KostasBan.Lens
                 refresh();
             }
 
-            if (!string.IsNullOrEmpty(state.SearchText) && GUILayout.Button("Clear", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.MinHeight(metrics.ControlHeight)))
+            if (!string.IsNullOrEmpty(state.SearchText) && GUILayout.Button("Clear", GUILayout.Width(metrics.ApplyButtonWidth), GUILayout.Height(metrics.ControlHeight)))
             {
                 state.SearchText = string.Empty;
                 refresh();
@@ -75,7 +75,7 @@ namespace KostasBan.Lens
                 DrawReportButton("Share", share, metrics.PrimaryButtonWidth, metrics);
                 GUILayout.EndHorizontal();
 
-                DrawStatus(state, styles, toggleKey);
+                DrawStatusRow(state, styles, metrics, toggleKey);
                 return;
             }
 
@@ -86,32 +86,37 @@ namespace KostasBan.Lens
             DrawReportButton("Screenshot", captureScreenshot, metrics.PrimaryButtonWidth, metrics);
             DrawReportButton("Share", share, metrics.PrimaryButtonWidth, metrics);
 
-            if (state.HasStatus)
-            {
-                GUILayout.Label(state.StatusMessage, state.StatusIsError ? styles.ErrorStatus : styles.Status);
-            }
-
             GUILayout.FlexibleSpace();
             GUILayout.Label($"Toggle: {toggleKey}", styles.Status);
             GUILayout.EndHorizontal();
+
+            DrawStatusRow(state, styles, metrics, toggleKey);
         }
 
-        private static void DrawStatus(LensConsoleState state, LensGuiStyles styles, KeyCode toggleKey)
+        private static void DrawStatusRow(LensConsoleState state, LensGuiStyles styles, LensLayoutMetrics metrics, KeyCode toggleKey)
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(GUILayout.Height(metrics.ControlHeight));
             if (state.HasStatus)
             {
                 GUILayout.Label(state.StatusMessage, state.StatusIsError ? styles.ErrorStatus : styles.Status);
             }
+            else
+            {
+                GUILayout.Label(GUIContent.none, styles.Status);
+            }
 
             GUILayout.FlexibleSpace();
-            GUILayout.Label($"Toggle: {toggleKey}", styles.Status);
+            if (metrics.IsCompact)
+            {
+                GUILayout.Label($"Toggle: {toggleKey}", styles.Status);
+            }
+
             GUILayout.EndHorizontal();
         }
 
         private static void DrawReportButton(string label, Action action, float width, LensLayoutMetrics metrics)
         {
-            if (GUILayout.Button(label, GUILayout.Width(width), GUILayout.MinHeight(metrics.ControlHeight)))
+            if (GUILayout.Button(label, GUILayout.Width(width), GUILayout.Height(metrics.ControlHeight)))
             {
                 action();
             }
