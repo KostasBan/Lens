@@ -4,9 +4,17 @@
 [![Unity EditMode Tests](https://github.com/KostasBan/Lens/actions/workflows/unity-tests.yml/badge.svg)](https://github.com/KostasBan/Lens/actions/workflows/unity-tests.yml)
 [![Latest Release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/KostasBan/Lens/releases/tag/v1.1.0)
 
-Lens is a small runtime debug/inspection panel for Unity projects. It gives developers and QA a quick way to inspect useful in-build state without attaching a debugger, rebuilding custom debug menus, or wiring every system directly into one UI.
+Lens is a small runtime debug/inspection panel for Unity projects. It helps developers and QA inspect useful in-build state without attaching a debugger, rebuilding custom debug menus, or coupling every system to one UI.
 
-Lens is intentionally generic: runtime systems register section providers, Lens renders those sections, and QA can copy a useful report for bug reproduction.
+Runtime systems register section providers, Lens renders those sections, and QA can copy text/JSON reports or local screenshots for bug reproduction.
+
+## Preview
+
+[![Lens runtime overlay showing build info and sample feature flag providers](Docs/images/lens-overlay.png)](Docs/media/lens-preview.mp4)
+
+[Watch the Lens preview video](Docs/media/lens-preview.mp4)
+
+Lens groups provider-owned sections, supports folding/search, exposes safe interactive entries, and keeps QA-facing report actions in the footer.
 
 ## Quick Start
 
@@ -45,7 +53,7 @@ LensRuntimeConsole.EnsureExists();
 
 Create the console once during bootstrap with `LensRuntimeConsole.EnsureExists()`, then press `F1` or use the floating button.
 
-## How To Use Lens
+## Use Cases
 
 Use Lens whenever an important runtime value should be visible during development, QA, staging, or controlled internal builds.
 
@@ -58,13 +66,13 @@ Common examples:
 - expose performance counters,
 - add safe action buttons for project-owned debug tools.
 
-Install the package, add a provider, register it during bootstrap, then open Lens with `F1` or the floating `Lens` button. On mobile portrait screens, Lens scales up automatically and switches to a compact stacked layout.
+Install the package, add a provider, register it during bootstrap, then open Lens with `F1` or the floating `Lens` button. On mobile portrait screens, Lens scales automatically and switches to a compact stacked layout.
 
 ## Why Lens Exists
 
 Many Unity bugs are hard to reproduce because the important runtime context is scattered across systems: build version, active scene, platform, environment, session, feature-like values, recent events, and performance. Lens puts that context into one provider-based overlay that can be used in Editor, development builds, staging, QA, and controlled internal builds.
 
-V1.0 is deliberately small, extensible, responsive, and easier to attach to QA reports:
+Lens is deliberately small, extensible, responsive, and easy to attach to QA reports:
 
 - Runtime IMGUI overlay
 - `F1` keyboard toggle
@@ -117,17 +125,11 @@ flowchart LR
 
 Providers own data and callbacks. Lens owns rendering, filtering, report generation, and lightweight UI state.
 
-## Screenshots
-
-Lens is built to stay readable in the Editor and in internal builds while keeping the integration surface small.
-
-![Lens runtime overlay showing build info and sample feature flag providers](Docs/images/lens-overlay.png)
-
-The runtime overlay groups provider-owned sections, supports folding/search, and keeps QA-facing actions in the footer.
+## Reports
 
 ![Lens copied text report with metadata, redaction, entries, and recent events](Docs/images/lens-text-report.png)
 
-Text reports are meant for quick bug tickets and developer handoffs.
+Text reports are meant for quick bug tickets, staging checks, and developer handoffs.
 
 ![Lens JSON report opened in VS Code](Docs/images/lens-json-report.png)
 

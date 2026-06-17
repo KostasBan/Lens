@@ -67,6 +67,7 @@ jobs:
             "Docs/architecture-decisions.md",
             "Docs/api-overview.md",
             "Docs/future-integrations.md",
+            "Docs/media/lens-preview.mp4",
             "CHANGELOG.md",
             "CONTRIBUTING.md",
             "Samples~/Provider Cookbook/Scripts/LensCookbookBootstrap.cs",
