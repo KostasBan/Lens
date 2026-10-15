@@ -21,6 +21,7 @@ namespace KostasBan.Lens
         private string pendingActionKey = string.Empty;
 
         public bool IsOpen { get; private set; }
+        public event System.Action<bool> VisibilityChanged;
 
         public string SearchText { get; set; } = string.Empty;
 
@@ -40,17 +41,23 @@ namespace KostasBan.Lens
 
         public void Open()
         {
-            IsOpen = true;
+            SetOpen(true);
         }
 
         public void Close()
         {
-            IsOpen = false;
+            SetOpen(false);
         }
 
         public void Toggle()
         {
-            IsOpen = !IsOpen;
+            SetOpen(!IsOpen);
+        }
+        private void SetOpen(bool value)
+        {
+            if (IsOpen == value) return;
+            IsOpen = value;
+            VisibilityChanged?.Invoke(value);
         }
 
         public bool IsActionConfirmationPending(string actionKey)

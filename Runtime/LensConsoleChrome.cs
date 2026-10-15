@@ -116,6 +116,7 @@ namespace KostasBan.Lens
 
         private static void DrawReportButton(string label, Action action, float width, LensLayoutMetrics metrics)
         {
+            if (action == null) return;
             if (GUILayout.Button(label, GUILayout.Width(width), GUILayout.Height(metrics.ControlHeight)))
             {
                 action();
