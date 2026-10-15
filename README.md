@@ -543,3 +543,21 @@ The public package validation workflow is always runnable. Unity EditMode tests 
 ## License
 
 MIT
+# Host-owned activation and input handoff
+
+`LensRuntimeConsole.IsOpen` and `VisibilityChanged(bool)` let a consumer suspend
+its own input/simulation. Transitions are synchronous and duplicate calls do not
+notify twice. Closing through the panel, disabling or destroying the component,
+and denying `LensRuntimePolicy` all notify closure. A denied or disabled console
+cannot be opened. Re-enabling permission does not automatically reopen it.
+
+Set `ToggleKey = KeyCode.None` and `ShowFloatingButton = false` when the host owns
+activation. Subscribe before calling `Open()`. On opening, cancel any in-progress
+gesture; on closing, wait for held pointers to release before accepting a new
+gesture. Lens does not change time scale, cursor state or input actions. Unsubscribe
+when the host is disposed. `AllowNativeShare = false` removes the native-share
+footer action while preserving explicit local report/screenshot controls.
+
+The package declares its IMGUI, screenshot, JSON serialization and Android JNI
+module requirements so minimal consumers compile without implicit dependencies.
+

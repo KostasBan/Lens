@@ -2,6 +2,7 @@ namespace KostasBan.Lens
 {
     public static class LensRuntimePolicy
     {
+        public static event System.Action<bool> AllowedChanged;
         private static bool? allowedOverride;
 
         public static bool DefaultIsAllowed
@@ -20,12 +21,16 @@ namespace KostasBan.Lens
 
         public static void SetAllowed(bool allowed)
         {
+            var previous = IsAllowed;
             allowedOverride = allowed;
+            if (previous != IsAllowed) AllowedChanged?.Invoke(IsAllowed);
         }
 
         public static void ResetToDefault()
         {
+            var previous = IsAllowed;
             allowedOverride = null;
+            if (previous != IsAllowed) AllowedChanged?.Invoke(IsAllowed);
         }
     }
 }

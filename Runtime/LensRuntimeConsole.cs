@@ -24,7 +24,25 @@ namespace KostasBan.Lens
         private readonly LensSectionCache sectionCache = new LensSectionCache();
         private readonly LensConsoleChrome chrome = new LensConsoleChrome();
 
-        internal bool IsOpen => state.IsOpen;
+        public bool IsOpen => state.IsOpen;
+        public event Action<bool> VisibilityChanged;
+        public KeyCode ToggleKey { get => toggleKey; set => toggleKey = value; }
+        public bool ShowFloatingButton { get => showFloatingButton; set => showFloatingButton = value; }
+        public bool AllowNativeShare { get; set; } = true;
+        private void OnEnable()
+        {
+            state.VisibilityChanged += NotifyVisibility;
+            LensRuntimePolicy.AllowedChanged += OnPolicyChanged;
+        }
+        private void OnDisable()
+        {
+            Close();
+            state.VisibilityChanged -= NotifyVisibility;
+            LensRuntimePolicy.AllowedChanged -= OnPolicyChanged;
+        }
+        private void OnDestroy() { Close(); }
+        private void NotifyVisibility(bool open) => VisibilityChanged?.Invoke(open);
+        private void OnPolicyChanged(bool allowed) { if (!allowed) Close(); }
 
         internal LensRuntimeDiagnostics Diagnostics => sectionCache.Diagnostics;
 
@@ -95,7 +113,7 @@ namespace KostasBan.Lens
 
         public void Open()
         {
-            if (!LensRuntimePolicy.IsAllowed)
+            if (!isActiveAndEnabled || !LensRuntimePolicy.IsAllowed)
             {
                 return;
             }
@@ -111,6 +129,7 @@ namespace KostasBan.Lens
 
         public void Toggle()
         {
+            if (!isActiveAndEnabled) return;
             if (!LensRuntimePolicy.IsAllowed)
             {
                 return;
@@ -157,7 +176,7 @@ namespace KostasBan.Lens
 
         private void HandleToggleEvent(Event currentEvent)
         {
-            if (currentEvent == null || currentEvent.type != EventType.KeyDown || currentEvent.keyCode != toggleKey)
+            if (toggleKey == KeyCode.None || currentEvent == null || currentEvent.type != EventType.KeyDown || currentEvent.keyCode != toggleKey)
             {
                 return;
             }
@@ -185,7 +204,7 @@ namespace KostasBan.Lens
             }
 
             GUILayout.EndScrollView();
-            chrome.DrawFooter(state, styles, metrics, toggleKey, CopyTextReport, CopyJsonReport, CaptureScreenshot, ShareReport);
+            chrome.DrawFooter(state, styles, metrics, toggleKey, CopyTextReport, CopyJsonReport, CaptureScreenshot, AllowNativeShare ? (Action)ShareReport : null);
 
             GUILayout.EndVertical();
             GUILayout.EndArea();
